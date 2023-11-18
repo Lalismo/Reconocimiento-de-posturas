@@ -1,0 +1,25 @@
+
+{% import 'bootstrap/wtf.html' as wtf %}
+
+
+{% macro render_user(user, delete_form) %}
+<li class="list-group-item">
+    user: {{ user.id }}
+    email: {{ user.to_dict().email }}
+    phone: {{ user.to_dict().phone }}
+    {{ wtf.quick_form(delete_form, action=url_for('delete', user_id=user.id)) }}
+
+    <button ><a href="{{ url_for('redirect_update') }}">Actualizar</a></button>
+</li>
+{% endmacro %}
+
+
+{% macro render_user_update(user, update_form) %}
+<li class="list-group-item">
+    user: {{ user.id }}
+    email: {{ user.to_dict().email }}
+    phone: {{ user.to_dict().phone }}
+    {{ wtf.quick_form(update_form, action=url_for('update', user_id=user.id, email=user.to_dict().email, phone=user.to_dict().phone)) }}
+</li>
+
+{% endmacro %}
