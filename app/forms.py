@@ -1,12 +1,12 @@
 from flask_wtf import FlaskForm
-from wtforms.fields import StringField, PasswordField, SubmitField, IntegerField, FileField
-from wtforms.validators import DataRequired
+from wtforms.fields import StringField, PasswordField, SubmitField, IntegerField, FileField, EmailField
+from wtforms.validators import DataRequired, NumberRange
 
 class LoginForm(FlaskForm):
     username = StringField('Nombre de usuario', validators=[DataRequired()])
     password = PasswordField('Password', validators=[DataRequired()])
-    email = StringField('Correo de usuario', validators=[DataRequired()])
-    phone = IntegerField('Numero de telefono', validators = [DataRequired()])
+    email = EmailField('Correo de usuario', validators=[DataRequired()])
+    phone = IntegerField('Numero de telefono', validators = [DataRequired(),NumberRange(0000000000,9999999999)])
     submit = SubmitField('Enviar')
     
 # class TodoForm(FlaskForm):
@@ -20,8 +20,8 @@ class DeleteUserForm(FlaskForm):
     submit = SubmitField('Borrar')
 
 class UpdateUserForm(FlaskForm):
-    email = StringField('Correo de usuario', validators=[DataRequired()])
-    phone = IntegerField('Numero de telefono', validators = [DataRequired()])
+    email = EmailField('Correo de usuario', validators=[DataRequired()])
+    phone = IntegerField('Numero de telefono', validators = [DataRequired(),NumberRange(0000000000,9999999999)])
     submit = SubmitField('Actualizar')
 
 

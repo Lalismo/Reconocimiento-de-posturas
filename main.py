@@ -4,7 +4,7 @@ import unittest
 from flask_login import login_required, current_user
 from app import create_app
 from app.forms import DeleteUserForm, UpdateUserForm
-from app.firestore_service import  get_users, delete_user_by_id,update_user_by_id, get_user_by_id
+from app.firestore_service import  get_users, delete_user_by_id,update_user_by_id
 #Iniciamos la llamada de nuestro app mandando a llamar nuestro create_app
 app = create_app()
 
@@ -86,29 +86,24 @@ def delete(user_id):
     return redirect(url_for('hello'))
 
 @app.route('/update', methods=['GET'])
-def redirect_update():
-    username = current_user.id
-
+def update_redirect():
+    users = get_users() # Obtain all the users 
+    user_ip = session.get('user_ip') # Obtain the Ip from the cookies
     update_form = UpdateUserForm()
     context = {
-        'username': username,
-        'users': get_users(),
-        'update_form':update_form,
+        'users': users,
+        'user_ip': user_ip,
+        'update_form': update_form,
     }
-   
-    return render_template('update.html',**context)
+    return render_template('update.html', **context)
 
-@app.route('/update/<user_id>/<string:email>/<int:phone>', methods=['GET' ,'POST'])
-def update(user_id, email, phone):
-    update_form = UpdateUserForm()
-    context = {
-        'update_form' : update_form,
-        'email' : email,
-        'phone' : phone,
-    }
-    
-    update_user_by_id(user_id=user_id, user_data=context)
 
+@app.route('/users/<user_id>', methods=['GET' ,'POST'])
+def update_user(user_id):
+    if request.method == 'POST':
+        email = request.form.get('email')
+        phone = int(request.form.get('phone'))
+        update_user_by_id(user_id=user_id, email=email, phone=phone)
     return redirect(url_for('hello'))
 
 if __name__ == '__main__':

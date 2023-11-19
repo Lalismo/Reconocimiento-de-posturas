@@ -31,10 +31,15 @@ def delete_user_by_id(user_id):
 def get_user_ref(user_id):
     return db.collection('users').document(user_id)    
 
-def update_user_by_id(user_id, user_data):
-    user_ref = get_user_ref(user_id)
-    user_ref.update({'email': user_data.email,
-                     'phone': user_data.phone,})
+def update_user_by_id(user_id, email, phone):
+    user_ref = _get_user_ref(user_id)
+    user_ref.update(
+        {'email': email,
+        'phone': phone}
+    )
+
+def _get_user_ref(user_id):
+    return db.document(f'users/{user_id}')
 
 
 # def get_todos(user_id):
