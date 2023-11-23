@@ -1,4 +1,4 @@
-from flask import Flask, render_template, Response, request, make_response, redirect, abort, session, url_for, flash
+from flask import Flask,send_from_directory, render_template, Response, request, make_response, redirect, abort, session, url_for, flash
 from camera import VideoCamera
 import unittest
 from flask_login import login_required, current_user
@@ -10,7 +10,7 @@ from app.forms import DeleteUserForm, UpdateUserForm, ImageForm, DeleteImageForm
 from app.firestore_service import  get_users, delete_user_by_id,update_user_by_id
 #Iniciamos la llamada de nuestro app mandando a llamar nuestro create_app
 app = create_app()
-# app.config['UPLOAD_FOLDER'] = ("/app/static/files")
+app.config['UPLOAD_FOLDER'] = (r".\app\static\files")
 
 @app.cli.command()
 def test():
@@ -111,7 +111,7 @@ def update_user(user_id):
     return redirect(url_for('hello'))
 
 
-'''
+
 @app.route('/upload', methods=['GET', 'POST'])
 def upload():
     images_form = ImageForm()
@@ -120,61 +120,36 @@ def upload():
     }
     if images_form.validate_on_submit():
         file = images_form.file.data
-        filename = secure_filename(file.filename)
-        file.save(os.path.join(os.path.abspath(os.path.dirname(__file__)), app.config['UPLOAD_FOLDER'], filename))
-        return('Succesfull upload')
+        filename = (file.filename)
+        file_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), app.config['UPLOAD_FOLDER'], filename)
+
+        # Verificar si el archivo ya existe para actualizarlo
+        if os.path.exists(file_path):
+            os.remove(file_path)
+
+        file.save(file_path)
+        print(file_path) 
+        return 'Successful upload'
         
     return render_template('images.html', **context)
-'''
 
-def listaArchivos():
-    urlFiles = 'app/static/files'
-    return (os.listdir(urlFiles))
+@app.route('/view')
+def view_image():
+    image_folder = app.config['UPLOAD_FOLDER']
+    image_list = os.listdir(image_folder)
+       
+    return render_template('images.html', image_list=image_list)
+   
 
-@app.route('/images', methods=['GET', 'POST'])
-def image():
-    
-    images_form = ImageForm()
-    delete_form = DeleteImageForm()
-    context = {
-        'images_form': images_form,
-        'delete_image_form': delete_form
-    }
-    print(listaArchivos())
-    return render_template('images.html', list_Photos = listaArchivos(), **context)
+@app.route('/delete/<filename>')
+def delete_image(filename):
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    if os.path.exists(file_path):
+        os.remove(file_path)
+        return 'Image deleted successfully'
+    else:
+        return 'Image not found'
 
-@app.route('/guardar-foto', methods=['GET', 'POST'])
-def registarArchivo():
-  
-    if request.method == 'POST':
-            if(request.files['archivo']):
-                #Script para archivo
-                file     = request.files['archivo']
-                basepath = os.path.dirname (__file__) #La ruta donde se encuentra el archivo actual
-                filename = secure_filename(file.filename) #Nombre original del archivo
-                
-                #capturando extensión del archivo ejemplo: (.png, .jpg, .pdf ...etc)
-                extension = os.path.splitext(filename)[1]
-                upload_path = os.path.join (basepath, 'app/static/files', extension) 
-                file.save(upload_path)
-
-    return render_template('images.html', list_Photos = listaArchivos())
-
-@app.route('/<string:nombreFoto>', methods=['GET','POST'])
-def EliminarFoto(nombreFoto):
-    print(nombreFoto)
-    if request.method == 'GET':
-        #print(nombreFoto) #Nombre del archivo subido
-        basepath = os.path.dirname (__file__) #C:\xampp\htdocs\elmininar-archivos-con-Python-y-Flask\app
-        url_File = os.path.join (basepath, 'app/static/files', nombreFoto)
-        #print(url_File)
-        
-        #verifcando si existe el archivo, con la funcion (path.exists) antes de de llamar remove 
-        # para eliminarlo, con el fin de evitar un error si no existe.
-        if os.path.exists(url_File):
-            os.remove(url_File) #Borrar foto desde la carpeta
-            #os.unlink(url_File) #Otra forma de borrar archivos en una carpeta
-    return render_template('images.html', list_Photos = listaArchivos())
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True)
