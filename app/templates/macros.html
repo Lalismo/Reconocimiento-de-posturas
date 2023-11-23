@@ -20,3 +20,14 @@
 </li>
 
 {% endmacro %}
+
+{% macro render_image(photo, delete_image_form) %}
+<li class="list-group-item">
+    {% set path = 'app/static/files/' %}
+    <div class="media">
+        <img src="{{ path }}{{ photo }}" class="mr-3" alt="{{ photo }}">
+    </div>
+    {{ wtf.quick_form(delete_image_form, action=url_for('EliminarFoto', nombreFoto=photo)) }}
+</li>
+{% endmacro %}
+

@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms.fields import StringField, PasswordField, SubmitField, IntegerField, FileField, EmailField
-from wtforms.validators import DataRequired, NumberRange
+from wtforms.validators import DataRequired, NumberRange, InputRequired
 
 class LoginForm(FlaskForm):
     username = StringField('Nombre de usuario', validators=[DataRequired()])
@@ -14,8 +14,12 @@ class LoginForm(FlaskForm):
 #     submit = SubmitField('Crear')
 
 class ImageForm(FlaskForm):
-    image = FileField('Imagen', validators=[DataRequired()])
+    file = FileField('Imagen', validators=[InputRequired()])
+    submit = SubmitField('Upload')
     
+class DeleteImageForm():
+    submit = SubmitField('Borrar')    
+
 class DeleteUserForm(FlaskForm):
     submit = SubmitField('Borrar')
 

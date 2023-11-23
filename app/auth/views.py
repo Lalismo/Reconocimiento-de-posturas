@@ -1,5 +1,5 @@
 from flask import render_template, session,redirect,url_for,flash
-from app.forms import LoginForm
+from app.forms import LoginForm, ImageForm
 from . import auth
 from app.firestore_service import get_user_by_id, user_put_data
 from app.models import UserModel, UserData
@@ -72,3 +72,5 @@ def logout():
     flash('Regresa pronto')
     
     return redirect(url_for('auth.login'))
+
+

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% import 'macros.html' as macros%}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block  title%} {{ super() }} Images {% endblock  %}
+
+
+{% block  content%}
+
+
+
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+  
+
+    
+      <ul class="list-group">
+          {% for photo in list_Photos %}
+              {{ macros.render_image(photo, delete_image_form) }}
+          {% endfor %}
+      </ul>
+  
+    </div>
+  
+</div>
+
+{% endblock  %}
