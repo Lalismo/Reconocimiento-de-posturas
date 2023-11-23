@@ -115,8 +115,11 @@ def update_user(user_id):
 @app.route('/upload', methods=['GET', 'POST'])
 def upload():
     images_form = ImageForm()
+    image_folder =app.config['UPLOAD_FOLDER']
+    image_list = os.listdir(image_folder)
     context = {
-        'images_form': images_form
+        'images_form': images_form,
+        'image_list': image_list,
     }
     if images_form.validate_on_submit():
         file = images_form.file.data
@@ -129,16 +132,13 @@ def upload():
 
         file.save(file_path)
         print(file_path) 
-        return 'Successful upload'
+        flash('Imagen subida exitosamente')
+        return redirect(url_for('upload'))
         
     return render_template('images.html', **context)
 
-@app.route('/view')
-def view_image():
-    image_folder = app.config['UPLOAD_FOLDER']
-    image_list = os.listdir(image_folder)
-       
-    return render_template('images.html', image_list=image_list)
+
+    
    
 
 @app.route('/delete/<filename>')
@@ -146,9 +146,11 @@ def delete_image(filename):
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     if os.path.exists(file_path):
         os.remove(file_path)
-        return 'Image deleted successfully'
+        flash('Imagen eliminada exitosamente')
+        return redirect(url_for('upload'))
     else:
-        return 'Image not found'
+        flash('Imagen no encontrada')
+        return redirect(url_for('upload'))
 
 
 if __name__ == '__main__':

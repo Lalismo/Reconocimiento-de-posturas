@@ -17,7 +17,7 @@ class ImageForm(FlaskForm):
     file = FileField('Imagen', validators=[InputRequired()])
     submit = SubmitField('Upload')
     
-class DeleteImageForm():
+class DeleteImageForm(FlaskForm):
     submit = SubmitField('Borrar')    
 
 class DeleteUserForm(FlaskForm):

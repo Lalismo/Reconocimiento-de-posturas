@@ -13,14 +13,18 @@
     {{ wtf.quick_form(images_form) }}
     <hr>
     <h3>Imágenes:</h3>
+
+
     <div class="row">
-        {% for image in image_list %}
-            <div class="col-md-4">
-                <img src="{{ url_for('view_image', filename=image) }}" alt="{{ image }}" class="img-thumbnail">
-                <a action= "{{ url_for('delete_image', filename=image) }}" class="btn btn-danger mt-2">Eliminar</a>
-            </div>
-        {% endfor %}
+    {% for image in image_list %}
+       
+        <div class="col-md-4">
+            <img src="{{ url_for('static', filename='files/' + image  ) }}" alt="{{ image }}">
+            <a href="{{ url_for('delete_image', filename=image) }}" class="btn btn-danger mt-2">Eliminar</a>
+        </div>
+    {% endfor %}
     </div>
+   
 </div>
 
 
