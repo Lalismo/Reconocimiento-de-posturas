@@ -1,10 +1,9 @@
 from flask import Flask,send_from_directory, render_template, Response, request, make_response, redirect, abort, session, url_for, flash
-from camera import VideoCamera
 import unittest
 from flask_login import login_required, current_user
 from app import create_app
-from werkzeug.utils import secure_filename
 import os
+import capturaPosturas
 from app.config import Config
 from app.forms import DeleteUserForm, UpdateUserForm, ImageForm, DeleteImageForm
 from app.firestore_service import  get_users, delete_user_by_id,update_user_by_id
@@ -67,7 +66,7 @@ def camara():
     return Response(gen(VideoCamera()),mimetype='multipart/x-mixed-replace; boundary=frame')odigos para inicio de sesión
 '''
     
- #Creamos la ruta de hello y definimos su función
+#Creamos la ruta de hello y definimos su función
 
 @app.route('/hello', methods=['GET'])
 @login_required
@@ -136,10 +135,6 @@ def upload():
         return redirect(url_for('upload'))
         
     return render_template('images.html', **context)
-
-
-    
-   
 
 @app.route('/delete/<filename>')
 def delete_image(filename):

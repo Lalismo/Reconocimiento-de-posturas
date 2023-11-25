@@ -31,21 +31,20 @@ def captura():
     yellow = (0, 255, 255)
     pink = (255, 0, 255)
 
-    dataPath = os.path.join(os.path.dirname(__file__), 'Data') #encuentra la ruta Data sin importar el sistema que se este usando al momento de la ejecucion
-   
-    personpath = os.path.join(dataPath, 'Entrenamiento')
-    valpath = os.path.join(dataPath, 'Validacion')
+    staticPath = os.path.join(os.path.dirname(__file__), 'app\static') #encuentra la ruta Data sin importar el sistema que se este usando al momento de la ejecucion
+    data = os.path.join(staticPath,'Data')
     
+    if not os.path.exists(data):
+        os.makedirs(data)
+
+    personpath = os.path.join(data, 'Entrenamiento')
+    valpath = os.path.join(data, 'Validacion')
     goodposture = os.path.join(personpath, 'Buena')
     val_good = os.path.join(valpath, 'Buena')
-    
     badposture = os.path.join(personpath, 'Mala')
     val_bad = os.path.join(valpath, 'Mala')
-    
     regularposture = os.path.join(personpath, 'Regular')
-    val_regular = os.path.join(valpath, 'Regular')
-    
-    print(personpath)
+    val_regular = os.path.join(valpath, 'Regular')    
 
     if  os.path.exists(personpath) and os.path.exists(valpath):
         print(f"Carpeta encontrada: {personpath} y {valpath}")
@@ -118,14 +117,19 @@ def captura():
                 cv2.line(image, (l_shldr_x, l_shldr_y), (l_shldr_x, l_shldr_y - 100), green, 4)
                 cv2.line(image, (l_hip_x, l_hip_y), (l_shldr_x, l_shldr_y), green, 4)
                 cv2.line(image, (l_hip_x, l_hip_y), (l_hip_x, l_hip_y - 100), green, 4)
-                img_filename = os.path.join(goodposture, 'frame_{}.jpg'.format(good_frames))
-                cv2.imwrite(img_filename, image)
+                img_filename = os.path.join(goodposture, 'good_{}.jpg'.format(good_frames))
+                
+                if not os.path.exists(img_filename):
+                    cv2.imwrite(img_filename, image)
+                                   
                 if good_frames<11:#se toman de las primeras 10 imagenes que se capturan de la camara
-                    img_val_filename = os.path.join(val_good, 'frame_{}.jpg'.format(good_frames))
+                    img_val_filename = os.path.join(val_good, 'good_{}.jpg'.format(good_frames))
                     cv2.imwrite(img_val_filename, image)
                 # Cada vez que se detecta una buena postura, aumenta el contador de buenas posturas
                 total_good_postures += 1
+                
             elif neck_inclination < 40 and neck_inclination > 20 and torso_inclination < 10 and torso_inclination > 5:
+
                 regular_frames += 1
                 cv2.putText(image, angle_text_string, (10, 30), font, 0.9, yellow, 2)
                 cv2.putText(image, str(int(neck_inclination)), (l_shldr_x + 10, l_shldr_y), font, 0.9, yellow, 2)
@@ -134,10 +138,13 @@ def captura():
                 cv2.line(image, (l_shldr_x, l_shldr_y), (l_shldr_x, l_shldr_y - 100), yellow, 4)
                 cv2.line(image, (l_hip_x, l_hip_y), (l_shldr_x, l_shldr_y), yellow, 4)
                 cv2.line(image, (l_hip_x, l_hip_y), (l_hip_x, l_hip_y - 100), yellow, 4)
-                img_filename = os.path.join(regularposture, 'frame_{}.jpg'.format(regular_frames))
-                cv2.imwrite(img_filename, image)
+                img_filename = os.path.join(regularposture, 'regular_{}.jpg'.format(regular_frames))
+                
+                if not os.path.exists(img_filename):
+                    cv2.imwrite(img_filename, image)
+                    
                 if regular_frames<11:#se toman de las primeras 10 imagenes que se capturan de la camara
-                    img_val_filename = os.path.join(val_regular, 'frame_{}.jpg'.format(regular_frames))
+                    img_val_filename = os.path.join(val_regular, 'regular_{}.jpg'.format(regular_frames))
                     cv2.imwrite(img_val_filename, image)
                 total_regular_posture += 1
                 
@@ -151,10 +158,13 @@ def captura():
                 cv2.line(image, (l_shldr_x, l_shldr_y), (l_shldr_x, l_shldr_y - 100), red, 4)
                 cv2.line(image, (l_hip_x, l_hip_y), (l_shldr_x, l_shldr_y), red, 4)
                 cv2.line(image, (l_hip_x, l_hip_y), (l_hip_x, l_hip_y - 100), red, 4)
-                img_filename = os.path.join(badposture, 'frame_{}.jpg'.format(bad_frames))
-                cv2.imwrite(img_filename, image)
+                img_filename = os.path.join(badposture, 'bad_{}.jpg'.format(bad_frames))
+                
+                if not os.path.exists(img_filename):
+                    cv2.imwrite(img_filename, image)
+                
                 if bad_frames<11:#se toman de las primeras 10 imagenes que se capturan de la camara
-                    img_val_filename = os.path.join(val_bad, 'frame_{}.jpg'.format(bad_frames))
+                    img_val_filename = os.path.join(val_bad, 'bad_{}.jpg'.format(bad_frames))
                     cv2.imwrite(img_val_filename, image)
                 # Cada vez que se detecta una mala postura, aumenta el contador de malas posturas
                 total_bad_postures += 1
@@ -163,7 +173,7 @@ def captura():
         # Display the image
         cv2.imshow('frame', image)
 
-        if cv2.waitKey(1) & 0xFF == ord('q'):  # Press 'q' to exit the loop
+        if cv2.waitKey(1) & 0xFF == ord('q') :  # Press 'q' to exit the loop
             break
 
     cap.release()

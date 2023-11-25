@@ -10,21 +10,46 @@
 
 
 <div class="container">
+    
     {{ wtf.quick_form(images_form) }}
     <hr>
-    <h3>Imágenes:</h3>
-
-
+    <h3>Good Position Images:</h3>
     <div class="row">
     {% for image in image_list %}
        
         <div class="col-md-4">
-            <img src="{{ url_for('static', filename='files/' + image  ) }}" alt="{{ image }}">
-            <a href="{{ url_for('delete_image', filename=image) }}" class="btn btn-danger mt-2">Eliminar</a>
+            <img src="{{ url_for('static', filename='files/' + image  ) }}" alt="{{ image }}" style ="max-width : 250px;  padding-bottom:30px;">
+            <a href="{{ url_for('delete_image', filename=image) }}" class="btn btn-danger mt-2" style=" margin-right:50px; margin-left:25px; margin-bottom: 20px;">Update</a>
+            <a href="{{ url_for('delete_image', filename=image) }}" class="btn btn-danger mt-2" style=" margin-bottom: 20px;">Delete</a>
         </div>
     {% endfor %}
     </div>
-   
+    <hr>
+    <h3>Regular Position Images:</h3>
+    <div class="row">
+    {% for image in image_list %}
+       
+        <div class="col-md-4">
+            <img src="{{ url_for('static', filename='files/' + image  ) }}" alt="{{ image }}" style ="max-width : 250px;  padding-bottom:30px;">
+            <a href="{{ url_for('delete_image', filename=image) }}" class="btn btn-danger mt-2" style=" margin-right:50px; margin-left:25px; margin-bottom: 20px;">Update</a>
+            <a href="{{ url_for('delete_image', filename=image) }}" class="btn btn-danger mt-2" style=" margin-bottom: 20px;">Delete</a>
+        </div>
+    {% endfor %}
+    </div>
+    <hr>
+    <center><h3>Bad Position Images:</h3>
+    <div class="row">
+    {% for image in image_list %}
+       
+        <div class="col-md-4">
+            <img src="{{ url_for('static', filename='files/' + image  ) }}" alt="{{ image }}" style ="max-width : 250px;  padding-bottom:30px;">
+            <a href="{{ url_for('delete_image', filename=image) }}" class="btn btn-danger mt-2" style=" margin-right:50px;  margin-bottom: 20px;">Update</a>
+            <a href="{{ url_for('delete_image', filename=image) }}" class="btn btn-danger mt-2" style="margin-bottom: 20px;">Delete</a>
+
+        </div>
+    {% endfor %}
+    </div>
+</center>
 </div>
 
 
