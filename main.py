@@ -3,13 +3,16 @@ import unittest
 from flask_login import login_required, current_user
 from app import create_app
 import os
-import capturaPosturas
+from capturaPosturas import CapturePosture
 from app.config import Config
 from app.forms import DeleteUserForm, UpdateUserForm, ImageForm, DeleteImageForm
 from app.firestore_service import  get_users, delete_user_by_id,update_user_by_id
 #Iniciamos la llamada de nuestro app mandando a llamar nuestro create_app
 app = create_app()
-app.config['UPLOAD_FOLDER'] = (r".\app\static\files")
+
+app.config['IMAGE_GOOD_POSTURE'] = (r".\app\static\Data\Training\Good_Posture")
+app.config['IMAGE_REGULAR_POSTURE'] = (r".\app\static\Data\Training\Regular_Posture")
+app.config['IMAGE_BAD_POSTURE']=(r".\app\static\Data\Training\Bad_Posture")
 
 @app.cli.command()
 def test():
@@ -111,34 +114,77 @@ def update_user(user_id):
 
 
 
+
+
 @app.route('/upload', methods=['GET', 'POST'])
 def upload():
-    images_form = ImageForm()
-    image_folder =app.config['UPLOAD_FOLDER']
-    image_list = os.listdir(image_folder)
+   
+    list_of_good_posture = os.listdir(app.config['IMAGE_GOOD_POSTURE'])
+    list_of_regular_posture = os.listdir(app.config['IMAGE_REGULAR_POSTURE'])
+    list_of_bad_posture =os.listdir(app.config['IMAGE_BAD_POSTURE'])
     context = {
-        'images_form': images_form,
-        'image_list': image_list,
-    }
-    if images_form.validate_on_submit():
-        file = images_form.file.data
-        filename = (file.filename)
-        file_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), app.config['UPLOAD_FOLDER'], filename)
-
-        # Verificar si el archivo ya existe para actualizarlo
-        if os.path.exists(file_path):
-            os.remove(file_path)
-
-        file.save(file_path)
-        print(file_path) 
-        flash('Imagen subida exitosamente')
-        return redirect(url_for('upload'))
-        
+        'list_of_good_posture': list_of_good_posture,
+        'list_of_regular_posture' : list_of_regular_posture,
+        'list_of_bad_posture': list_of_bad_posture,
+    }   
     return render_template('images.html', **context)
 
-@app.route('/delete/<filename>')
-def delete_image(filename):
-    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+@app.route('/update_image/<filename>/<category>')
+def update_images(filename, category):
+    file_path = os.path.join(app.config['IMAGE_GOOD_POSTURE'], filename)
+    print(file_path)
+    if (category == '1'):   
+        file_path = os.path.join(app.config['IMAGE_GOOD_POSTURE'], filename)
+       
+    elif(category == '2'):
+        file_path = os.path.join(app.config['IMAGE_REGULAR_POSTURE'], filename)
+  
+    elif(category == '3'):
+        file_path = os.path.join(app.config['IMAGE_BAD_POSTURE'], filename)
+
+    else:
+        flash("Archivo no encontrado porfavor, no juegue con la URL chifladito")
+        redirect(url_for('upload'))
+    
+    if os.path.exists(file_path):
+        int(category)
+        os.remove(file_path)
+        CapturePosture(category, filename)
+        flash('Imagen actualizada exitosamente')
+        return redirect(url_for('upload'))
+    return redirect(url_for('upload'))
+        
+@app.route('/create_images')
+def create_images():
+    CapturePosture(0, '')
+    flash('Imagenes creadas exitosamente')
+    return redirect(url_for('upload'))
+
+@app.route('/delete_good/<filename>')
+def delete_good_image(filename):
+    file_path = os.path.join(app.config['IMAGE_GOOD_POSTURE'], filename)
+    if os.path.exists(file_path):
+        os.remove(file_path)
+        flash('Imagen eliminada exitosamente')
+        return redirect(url_for('upload'))
+    else:
+        flash('Imagen no encontrada')
+        return redirect(url_for('upload'))
+
+@app.route('/delete_regular/<filename>')
+def delete_regular_image(filename):
+    file_path = os.path.join(app.config['IMAGE_REGULAR_POSTURE'], filename)
+    if os.path.exists(file_path):
+        os.remove(file_path)
+        flash('Imagen eliminada exitosamente')
+        return redirect(url_for('upload'))
+    else:
+        flash('Imagen no encontrada')
+        return redirect(url_for('upload'))
+    
+@app.route('/delete_bad/<filename>')
+def delete_bad_image(filename):
+    file_path = os.path.join(app.config['IMAGE_BAD_POSTURE'], filename)
     if os.path.exists(file_path):
         os.remove(file_path)
         flash('Imagen eliminada exitosamente')

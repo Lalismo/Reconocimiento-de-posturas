@@ -11,40 +11,45 @@
 
 <div class="container">
     
-    {{ wtf.quick_form(images_form) }}
-    <hr>
+
+<center>
+    <h2>Crud images</h2>
+
+    <a href="{{ url_for('create_images') }}" class="btn btn-danger mt-2" style="margin-bottom: 20px;">Crear imagenes</a>
+
     <h3>Good Position Images:</h3>
     <div class="row">
-    {% for image in image_list %}
+    {% for image in list_of_good_posture %}
        
         <div class="col-md-4">
-            <img src="{{ url_for('static', filename='files/' + image  ) }}" alt="{{ image }}" style ="max-width : 250px;  padding-bottom:30px;">
-            <a href="{{ url_for('delete_image', filename=image) }}" class="btn btn-danger mt-2" style=" margin-right:50px; margin-left:25px; margin-bottom: 20px;">Update</a>
-            <a href="{{ url_for('delete_image', filename=image) }}" class="btn btn-danger mt-2" style=" margin-bottom: 20px;">Delete</a>
+            <img src="{{ url_for('static', filename='Data/Training/Good_Posture/' + image  ) }}" alt="{{ image }}" style ="max-width : 250px;  padding-bottom:30px;">
+            <a href="{{ url_for('update_images', filename=image, category=1) }}" class="btn btn-danger mt-2" style=" margin-right:50px;  margin-bottom: 20px;">Update</a>
+            <a href="{{ url_for('delete_good_image', filename=image) }}" class="btn btn-danger mt-2" style="margin-bottom: 20px;">Delete</a>
         </div>
     {% endfor %}
     </div>
     <hr>
     <h3>Regular Position Images:</h3>
     <div class="row">
-    {% for image in image_list %}
+    {% for image in list_of_regular_posture %}
        
         <div class="col-md-4">
-            <img src="{{ url_for('static', filename='files/' + image  ) }}" alt="{{ image }}" style ="max-width : 250px;  padding-bottom:30px;">
-            <a href="{{ url_for('delete_image', filename=image) }}" class="btn btn-danger mt-2" style=" margin-right:50px; margin-left:25px; margin-bottom: 20px;">Update</a>
-            <a href="{{ url_for('delete_image', filename=image) }}" class="btn btn-danger mt-2" style=" margin-bottom: 20px;">Delete</a>
+            <img src="{{ url_for('static', filename='Data/Training/Regular_Posture/' + image  ) }}" alt="{{ image }}" style ="max-width : 250px;  padding-bottom:30px;">
+            <a href="{{ url_for('update_images', filename=image, category=2) }}" class="btn btn-danger mt-2" style=" margin-right:50px;  margin-bottom: 20px;">Update</a>
+            <a href="{{ url_for('delete_regular_image', filename=image) }}" class="btn btn-danger mt-2" style="margin-bottom: 20px;">Delete</a>
         </div>
     {% endfor %}
     </div>
+    
     <hr>
-    <center><h3>Bad Position Images:</h3>
+    <h3>Bad Position Images:</h3>
     <div class="row">
-    {% for image in image_list %}
+    {% for image in list_of_bad_posture %}
        
         <div class="col-md-4">
-            <img src="{{ url_for('static', filename='files/' + image  ) }}" alt="{{ image }}" style ="max-width : 250px;  padding-bottom:30px;">
-            <a href="{{ url_for('delete_image', filename=image) }}" class="btn btn-danger mt-2" style=" margin-right:50px;  margin-bottom: 20px;">Update</a>
-            <a href="{{ url_for('delete_image', filename=image) }}" class="btn btn-danger mt-2" style="margin-bottom: 20px;">Delete</a>
+            <img src="{{ url_for('static', filename='Data/Training/Bad_Posture/' + image  ) }}" alt="{{ image }}" style ="max-width : 250px;  padding-bottom:30px;">
+            <a href="{{ url_for('update_images', filename=image, category=3) }}" class="btn btn-danger mt-2" style=" margin-right:50px;  margin-bottom: 20px;">Update</a>
+            <a href="{{ url_for('delete_bad_image', filename=image) }}" class="btn btn-danger mt-2" style="margin-bottom: 20px;">Delete</a>
 
         </div>
     {% endfor %}

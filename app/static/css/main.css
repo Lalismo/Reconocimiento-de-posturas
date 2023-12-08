@@ -4,6 +4,6 @@ html *{
     color: white;
 }
 
-img {
-    max-width: 30px;
+li{
+    background-color: rgb(63, 58, 58);
 }

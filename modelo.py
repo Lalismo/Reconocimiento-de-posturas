@@ -12,16 +12,19 @@ import tensorflow as tf
 import os
 import time
 
-train_path = os.path.join(os.path.dirname(__file__), 'Data', 'Entrenamiento')
-val_path = os.path.join(os.path.dirname(__file__), 'Data', 'Validacion')
+
+
+train_path = os.path.join(os.path.dirname(__file__), 'app\static\Data\Training')
+val_path = os.path.join(os.path.dirname(__file__), 'app\static\Data\Validation')
+print(train_path)
 
 def entrenamiento():
   
   current_time = time.time()
   
   # Rutas para las imágenes de entrenamiento y prueba   
-  train = os.path.join(os.path.dirname(__file__), 'Data', 'Entrenamiento')# encontramos la carpeta y la variable posture guarda la postura a evaluar en el modelo
-  val = os.path.join(os.path.dirname(__file__), 'Data', 'Validacion')
+  train = os.path.join(os.path.dirname(__file__), 'app\static\Data\Training')
+  val = os.path.join(os.path.dirname(__file__), 'app\static\Data\Validation')
 
   # Definir los hiperparámetros   
   epocas = 50 
@@ -48,10 +51,10 @@ def entrenamiento():
     
     datos_entrenamiento = entrenar.flow_from_directory(train, target_size=(altura,anchura),
                                                       batch_size=batch_size, class_mode="categorical",
-                                                      classes=['Buena', 'Mala', 'Regular'])    
+                                                      classes=['Good_Posture', 'Bad_Posture', 'Regular_Posture'])    
     datos_validacion = validar.flow_from_directory(val, target_size=(altura, anchura), batch_size=batch_size,
                                                     class_mode="categorical",   
-                                                    classes=['Buena', 'Mala', 'Regular'])   
+                                                    classes=['Good_Posture', 'Bad_Posture', 'Regular_Posture'])   
 
 
     # Construir la arquitectura de la red neuronal convolucional    
@@ -97,8 +100,8 @@ def entrenamiento():
     
     '''////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////'''
     #Elegir la imagen a clasificar    
-    imagen= os.path.join(val, 'Buena', 'frame_1.jpg')
-    #imagen="C:/Users/AXL/Desktop/EP3_COAO202495_C_P2/validar/Perros/perro8.jpg"    
+    imagen= os.path.join(val, 'Good_Posture', 'good_1.jpg')
+       
 
     altura,anchura=50,50    
     modelo= os.path.join(os.path.dirname(__file__), "cnn.h5")   
@@ -121,21 +124,20 @@ def entrenamiento():
     arg_max=np.argmax(clase[0])   
 
     if arg_max==0:
-      print("Buena postura")    
+      print("Good posture")    
     elif arg_max==1:
-      print("Media postura") 
+      print("Regular posture") 
     elif arg_max==2:
-      print("Mala postura")
+      print("Bad posture")
     else:
-      print("NADA")   
+      print("Empty")   
 
     return time.time() - current_time
 
   else:
 
     #Elegir la imagen a clasificar    
-    imagen= os.path.join(val, 'Buena', 'frame_1.jpg')
-    #imagen="C:/Users/AXL/Desktop/EP3_COAO202495_C_P2/validar/Perros/perro8.jpg"    
+    imagen= os.path.join(val, 'Good_Posture', 'good_1.jpg')   
 
     altura,anchura=50,50    
     modelo= os.path.join(os.path.dirname(__file__), "cnn.h5")   
@@ -158,16 +160,16 @@ def entrenamiento():
     arg_max=np.argmax(clase[0])   
 
     if arg_max==0:
-      print("Buena postura")    
+      print("Good posture")    
     elif arg_max==1:
-      print("Media postura") 
+      print("Regular posture") 
     elif arg_max==2:
-      print("Mala postura")
+      print("Bad posture")
     else:
       print("NADA")   
     
    
     return time.time() - current_time 
 
-print(entrenamiento())
+entrenamiento()
 

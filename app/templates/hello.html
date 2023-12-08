@@ -17,7 +17,7 @@
     {% endif %}
 
     
-    <ul class="list-group">
+    <ul class="list-group" style="background-color: rgb(63, 58, 58);">
         {% for user in users %}
             {{ macros.render_user(user, delete_form) }}
         {% endfor %}
