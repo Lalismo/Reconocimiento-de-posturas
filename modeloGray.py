@@ -10,7 +10,8 @@ from keras.models import load_model
 import tensorflow as tf
 import os
 import time
-from scipy import ndimage  # Agregamos la importación de scipy
+import scipy
+
 
 train_path = os.path.join(os.path.dirname(__file__), 'app\static\Data\Training')
 val_path = os.path.join(os.path.dirname(__file__), 'app\static\Data\Validation')

@@ -27,10 +27,10 @@ def entrenamiento():
   val = os.path.join(os.path.dirname(__file__), 'app\static\Data\Validation')
 
   # Definir los hiperparámetros   
-  epocas = 50 
+  epocas = 10
   altura, anchura = 50, 50    
   batch_size = 2    
-  pasos = 100   
+  pasos = 100 
   # Son hiperparámetros para la convolución   
   # Primera convolución   
   kernels_capa1 = 32    
