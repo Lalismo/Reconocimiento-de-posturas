@@ -13,15 +13,15 @@ import time
 import scipy
 
 
-train_path = os.path.join(os.path.dirname(__file__), 'app\static\Data\Training')
-val_path = os.path.join(os.path.dirname(__file__), 'app\static\Data\Validation')
+train_path = os.path.join(os.path.dirname(__file__), 'app\static\DataGray\Training')
+val_path = os.path.join(os.path.dirname(__file__), 'app\static\DataGray\Validation')
 
 def entrenamiento():
     current_time = time.time()
 
     # Rutas para las imágenes de entrenamiento y prueba
-    train = os.path.join(os.path.dirname(__file__), 'app\static\Data\Training')
-    val = os.path.join(os.path.dirname(__file__), 'app\static\Data\Validation')
+    train = os.path.join(os.path.dirname(__file__), 'app\static\DataGray\Training')
+    val = os.path.join(os.path.dirname(__file__), 'app\static\DataGray\Validation')
 
     # Definir los hiperparámetros
     epocas = 50
@@ -41,8 +41,8 @@ def entrenamiento():
     learning_rate = 0.001
 
     # Definir los datos sintéticos y la lectura de las imágenes
-    if not os.path.exists(os.path.join(os.path.dirname(__file__), 'cnn.h5')) and not os.path.exists(
-            os.path.join(os.path.dirname(__file__), 'cnn_pesos.h5')):
+    if not os.path.exists(os.path.join(os.path.dirname(__file__), 'cnnGray.h5')) and not os.path.exists(
+            os.path.join(os.path.dirname(__file__), 'cnn_pesosGray.h5')):
 
         entrenar = ImageDataGenerator(rescale=1 / 250, shear_range=0.2, zoom_range=0.2, horizontal_flip=True)
         validar = ImageDataGenerator(rescale=1 / 250)
@@ -91,15 +91,15 @@ def entrenamiento():
         cnn.fit(datos_entrenamiento, validation_data=datos_validacion, epochs=epocas, validation_steps=pasos, verbose=1)
 
         # Guardar el modelo y los pesos de entrenamiento
-        cnn.save(os.path.join(os.path.dirname(__file__), "cnn.h5"))
-        cnn.save_weights(os.path.join(os.path.dirname(__file__), "cnn_pesos.h5"))
+        cnn.save(os.path.join(os.path.dirname(__file__), "cnnGray.h5"))
+        cnn.save_weights(os.path.join(os.path.dirname(__file__), "cnn_pesosGray.h5"))
 
         # Elegir la imagen a clasificar
         imagen = os.path.join(val, 'Good_Posture', 'good_1.jpg')
 
         altura, anchura = 50, 50
-        modelo = os.path.join(os.path.dirname(__file__), "cnn.h5")
-        pesos = os.path.join(os.path.dirname(__file__), "cnn_pesos.h5")
+        modelo = os.path.join(os.path.dirname(__file__), "cnnGray.h5")
+        pesos = os.path.join(os.path.dirname(__file__), "cnn_pesosGray.h5")
 
         # Cargar el modelo y pesos
         cnn = load_model(modelo)
@@ -120,9 +120,9 @@ def entrenamiento():
         if arg_max == 0:
             print("Good posture")
         elif arg_max == 1:
-            print("Regular posture")
-        elif arg_max == 2:
             print("Bad posture")
+        elif arg_max == 2:
+            print("Regular posture")
         else:
             print("Empty")
 
@@ -131,11 +131,11 @@ def entrenamiento():
     else:
 
         # Elegir la imagen a clasificar
-        imagen = os.path.join(val, 'Good_Posture', 'good_1.jpg')
+        imagen = os.path.join(val, 'Regular_Posture', 'regular_1.jpg')
 
         altura, anchura = 50, 50
-        modelo = os.path.join(os.path.dirname(__file__), "cnn.h5")
-        pesos = os.path.join(os.path.dirname(__file__), "cnn_pesos.h5")
+        modelo = os.path.join(os.path.dirname(__file__), "cnnGray.h5")
+        pesos = os.path.join(os.path.dirname(__file__), "cnn_pesosGray.h5")
 
         # Cargar el modelo y pesos
         cnn = load_model(modelo)

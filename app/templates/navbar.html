@@ -36,9 +36,22 @@
                         style="max-width: 38px"
                         alt="Login Logo"></a></li>
                 {% endif %}
+
+               
+
+
+                
+                {% if current_user.is_authenticated and user_type == 1%}
+                
+                <li><a href="{{ url_for('index') }}">Inicio</a></li>
+                <li><a href="{{ url_for('upload') }}">Imagenes</a></li>
+                <li><a href="{{ url_for('signup_admin') }}">Registro</a></li>
+
+                {% elif current_user.is_authenticated and user_type == 2 %}
+                
                 <li><a href="{{ url_for('index') }}">Inicio</a></li>
                 <li><a href="{{ url_for('auth.signup') }}">Registro</a></li>
-                <li><a href="{{ url_for('upload') }}">Imagenes</a></li>
+                {% endif %}
 
             </ul>
         </div>

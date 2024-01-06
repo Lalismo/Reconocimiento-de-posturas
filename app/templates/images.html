@@ -15,8 +15,8 @@
 <center>
     <h2>Crud images</h2>
 
-    <a href="{{ url_for('create_images') }}" class="btn btn-danger mt-2" style="margin-bottom: 20px;">Crear imagenes</a>
-
+    {{ wtf.quick_form(images_form) }}
+    <hr>
     <h3>Good Position Images:</h3>
     <div class="row">
     {% for image in list_of_good_posture %}

@@ -5,11 +5,18 @@ from app import create_app
 import os
 from capturaPosturas import CapturePosture
 from app.config import Config
-from app.forms import DeleteUserForm, UpdateUserForm, ImageForm, DeleteImageForm
-from app.firestore_service import  get_users, delete_user_by_id,update_user_by_id
+from app.forms import DeleteUserForm, UpdateUserForm, ImageForm, Signup_AdminForm
+from app.firestore_service import  get_users, delete_user_by_id, update_user_by_id, get_type,get_user_by_id,user_put_data
+from flask_login import login_user
+from modelo import exist_model, val_image
+from capturaPosturas import count_exist_file
+from werkzeug.security import generate_password_hash
+from app.models import UserModel, UserData
+
 #Iniciamos la llamada de nuestro app mandando a llamar nuestro create_app
 app = create_app()
 
+app.config['IMAGE_VALIDATION'] = (r".\app\static\Data\Validation")
 app.config['IMAGE_GOOD_POSTURE'] = (r".\app\static\Data\Training\Good_Posture")
 app.config['IMAGE_REGULAR_POSTURE'] = (r".\app\static\Data\Training\Regular_Posture")
 app.config['IMAGE_BAD_POSTURE']=(r".\app\static\Data\Training\Bad_Posture")
@@ -55,7 +62,7 @@ def index():
     #Retonamos la respuesta
     return response
 
-'''''
+'''
 def gen(camera):
     while True:
         results = camera.get_frame()
@@ -83,6 +90,7 @@ def hello():
         'username': username,
         'users': get_users(),
         'delete_form': delete_form,
+        'user_type': get_type(username)
     }
     return render_template('hello.html', **context)
 
@@ -103,6 +111,37 @@ def update_redirect():
     }
     return render_template('update.html', **context)
 
+@app.route('/signup_admin', methods=['GET', 'POST'])
+
+def signup_admin():
+
+    signup_adminform = Signup_AdminForm()
+    context = {
+        'signup_admin_form': signup_adminform,
+    }
+    
+    if signup_adminform.validate_on_submit():
+        username = signup_adminform.username.data
+        password = signup_adminform.password.data
+        email = signup_adminform.email.data
+        phone = signup_adminform.phone.data
+        typeuser = signup_adminform.type_user.data
+        
+        user_doc = get_user_by_id(username)
+        if user_doc.to_dict() is None:
+            password_hash = generate_password_hash(password)
+            user_data = UserData(username, password_hash, email, phone, typeuser)
+            user_put_data(user_data)
+            user = UserModel(user_data)
+            flash(f'Usuario {username} creado correctamente!') 
+            return redirect(url_for('signup_admin'))
+        else:
+            flash('El usuario ya existe!')
+    
+    return render_template('signup_admin.html', **context)
+
+
+
 
 @app.route('/users/<user_id>', methods=['GET' ,'POST'])
 def update_user(user_id):
@@ -118,21 +157,68 @@ def update_user(user_id):
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload():
-   
-    list_of_good_posture = os.listdir(app.config['IMAGE_GOOD_POSTURE'])
-    list_of_regular_posture = os.listdir(app.config['IMAGE_REGULAR_POSTURE'])
+    ''' Funcion para subir imagenes y visualizar el archivo '''
+    images_form = ImageForm()
+    
+    # Lista de los archivos que estan en las carpetas
+    
+    list_of_good_posture = os.listdir(app.config['IMAGE_GOOD_POSTURE']) 
+    list_of_regular_posture = os.listdir(app.config['IMAGE_REGULAR_POSTURE']) 
     list_of_bad_posture =os.listdir(app.config['IMAGE_BAD_POSTURE'])
+    
+    # Variables que se enlazan al html que llama la funcion
     context = {
         'list_of_good_posture': list_of_good_posture,
         'list_of_regular_posture' : list_of_regular_posture,
         'list_of_bad_posture': list_of_bad_posture,
-    }   
+        'images_form' : images_form,
+    }
+    
+    # Condicion para validar los datos ingresados en el formulario
+    if images_form.validate_on_submit():
+        file = images_form.file.data # Información del nombre
+        filename = (file.filename) # Nombre del archivo
+        file_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), app.config['IMAGE_VALIDATION'], filename) # Ruta donde se guardara el archivo            
+        file.save(file_path) # Guardado de la imagen en la ruta que contiene la variable file_path
+            # Validacion de clasificacion de imagen
+        if val_image(file_path) == 0:#Si la imagen coincide con el modelo se mete al primer if
+            new_filename = count_exist_file(app.config['IMAGE_GOOD_POSTURE'], 0) # Obtencion del nombre del archivo conforme el archivo faltante en caso contrario se omite
+            print(new_filename)
+            if (new_filename != 3 ):#Si el contador de imagenes esta incompleto en la carpeta hace el cambio de nombre por la imagen que falta
+                os.rename(os.path.join(app.config['IMAGE_VALIDATION'], filename), os.path.join(app.config['IMAGE_GOOD_POSTURE'], new_filename))
+            else:
+                #Si no manda mensaje para mostrar al usuario que la carpeta esta llena
+                flash('Ya existe el valor maximo de imagenes permitido de esta categoria')
+        elif val_image(file_path) == 1:
+            new_filename = count_exist_file(app.config['IMAGE_BAD_POSTURE'], 1)
+            print(new_filename)
+            if (new_filename != 3):
+                os.rename(os.path.join(app.config['IMAGE_VALIDATION'], filename), os.path.join(app.config['IMAGE_BAD_POSTURE'], new_filename))
+            else:
+                flash('Ya existe el valor maximo de imagenes permitido de esta categoria')
+        elif val_image(file_path) == 2:
+            new_filename = count_exist_file(app.config['IMAGE_REGULAR_POSTURE'], 2)
+            print(new_filename)
+            if (new_filename != 3):    
+                os.rename(os.path.join(app.config['IMAGE_VALIDATION'], filename), os.path.join(app.config['IMAGE_REGULAR_POSTURE'], new_filename))
+            else:
+                flash('Ya existe el valor maximo de imagenes permitido de esta categoria')
+        elif val_image(file_path) == 3:
+            flash('La imagen no presenta ninguna similitud entre las 3 posturas, favor de subir otra foto')
+        else:
+            flash("Los modelos necesitan ser creados para poder validar el tipo de postura de la imagen, vuelva a intentarlo despues de crear los modelos.")
+            
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            return redirect(url_for('upload'))
+        
     return render_template('images.html', **context)
+
 
 @app.route('/update_image/<filename>/<category>')
 def update_images(filename, category):
     file_path = os.path.join(app.config['IMAGE_GOOD_POSTURE'], filename)
-    print(file_path)
+  
     if (category == '1'):   
         file_path = os.path.join(app.config['IMAGE_GOOD_POSTURE'], filename)
        

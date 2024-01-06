@@ -18,6 +18,9 @@ train_path = os.path.join(os.path.dirname(__file__), 'app\static\Data\Training')
 val_path = os.path.join(os.path.dirname(__file__), 'app\static\Data\Validation')
 print(train_path)
 
+def exist_model():
+    return (os.path.exists(os.path.join(os.path.dirname(__file__),'cnn.h5')) and os.path.exists(os.path.join(os.path.dirname(__file__), 'cnn_pesos.h5')))
+
 def entrenamiento():
   
   current_time = time.time()
@@ -27,10 +30,10 @@ def entrenamiento():
   val = os.path.join(os.path.dirname(__file__), 'app\static\Data\Validation')
 
   # Definir los hiperparámetros   
-  epocas = 10
+  epocas = 150
   altura, anchura = 50, 50    
   batch_size = 2    
-  pasos = 100 
+  pasos = 150 
   # Son hiperparámetros para la convolución   
   # Primera convolución   
   kernels_capa1 = 32    
@@ -44,7 +47,7 @@ def entrenamiento():
   learning_rate = 0.001   
 
   # Definir los datos sintéticos y la lectura de las imágenes
-  if not os.path.exists(os.path.join(os.path.dirname(__file__),'cnn.h5')) and not os.path.exists(os.path.join(os.path.dirname(__file__), 'cnn_pesos.h5')): 
+  if not exist_model(): 
     
     entrenar = ImageDataGenerator(rescale=1 / 250, shear_range=0.2, zoom_range=0.2, horizontal_flip=True)
     validar = ImageDataGenerator(rescale=1 / 250)
@@ -100,7 +103,7 @@ def entrenamiento():
     
     '''////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////'''
     #Elegir la imagen a clasificar    
-    imagen= os.path.join(val, 'Good_Posture', 'good_1.jpg')
+    imagen= os.path.join(val, 'Regular_Posture', 'regular_1.jpg')
        
 
     altura,anchura=50,50    
@@ -130,14 +133,15 @@ def entrenamiento():
     elif arg_max==2:
       print("Bad posture")
     else:
-      print("Empty")   
+      print("Empty")
+      arg_max=3
 
-    return time.time() - current_time
+    return current_time
 
   else:
 
     #Elegir la imagen a clasificar    
-    imagen= os.path.join(val, 'Good_Posture', 'good_1.jpg')   
+    imagen= os.path.join(val, 'Putita_de_acl_zorrita_bastarda.jpg')
 
     altura,anchura=50,50    
     modelo= os.path.join(os.path.dirname(__file__), "cnn.h5")   
@@ -162,14 +166,60 @@ def entrenamiento():
     if arg_max==0:
       print("Good posture")    
     elif arg_max==1:
-      print("Regular posture") 
+      print("Bad posture") 
     elif arg_max==2:
-      print("Bad posture")
+      print("Regular posture")
     else:
-      print("NADA")   
+      print("NADA")
+      arg_max = 3
     
    
-    return time.time() - current_time 
+    return current_time
 
-entrenamiento()
+
+def val_image(val_path):
+  ''' Valida la '''
+  if (os.path.exists(os.path.join('cnn.h5')) and os.path.exists(os.path.join('cnn_pesos.h5'))):
+    #Elegir la imagen a clasificar    
+    imagen= os.path.join(val_path)
+    
+
+    altura,anchura=50,50    
+    modelo= os.path.join(os.path.dirname(__file__), "cnn.h5")   
+    pesos= os.path.join(os.path.dirname(__file__), "cnn_pesos.h5")   
+
+    #Cargar el modelo y pesos   
+    cnn=load_model(modelo)    
+    cnn.load_weights(pesos)
+
+    #preparar imagen a clasificar
+    img_clasificar=load_img(imagen,target_size=(altura,anchura))
+    img_clasificar=img_to_array(img_clasificar)
+    img_clasificar=np.expand_dims(img_clasificar,axis=0)
+
+    #Clasificamos la imagen   
+    clase=cnn.predict(img_clasificar)   
+
+    print(clase)    
+
+    arg_max=np.argmax(clase[0])   
+
+    if arg_max==0:
+        print("Good posture")    
+    elif arg_max==1:
+        print("Bad posture") 
+    elif arg_max==2:
+        print("Regular posture")
+    else:
+        print("NADA")
+        arg_max == 3
+    return arg_max
+  
+ 
+    
+   
+ 
+
+if __name__ == '__main__':
+  entrenamiento()
 

@@ -6,6 +6,22 @@
 
 {% block  content%}
 
+    {% if user_type == 1 %}
+    {%  if user_ip  %}
+    <h3>Tu IP es {{ user_ip }}</h3>
+    {% else %} 
+    <a href="{{ url_for('index') }}">Ir a inicio</a>
+    {% endif %}
+
+
+    <ul class="list-group" style="background-color: rgb(63, 58, 58);">
+    {% for user in users %}
+        {{ macros.render_user(user, delete_form) }}
+    {% endfor %}
+    </ul>
+
+
+    {% else %} 
     {% if username %}
         <h1>Bienvenido {{ username | capitalize}}</h1>
     {% endif %}
@@ -15,11 +31,6 @@
     {% else %} 
         <a href="{{ url_for('index') }}">Ir a inicio</a>
     {% endif %}
+    {% endif %}
 
-    
-    <ul class="list-group" style="background-color: rgb(63, 58, 58);">
-        {% for user in users %}
-            {{ macros.render_user(user, delete_form) }}
-        {% endfor %}
-    </ul>
 {% endblock  %}

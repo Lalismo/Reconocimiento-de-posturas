@@ -16,6 +16,12 @@ filename: filename path
 '''
 
 def count_files_by_extension(dirname, extension):
+    ''' Funcion para obtener el numero de archivos con la misma extension dentro de una carpeta 
+    Arguments:
+    dirname     -- Path
+    extension   -- Extension
+    '''
+    
     # Obtener la lista de archivos en la carpeta
     files = os.listdir(dirname)
 
@@ -27,6 +33,26 @@ def count_files_by_extension(dirname, extension):
 
     return amount_files
 
+def count_exist_file(path, type):
+    
+    for number in range(1, 251):
+        if type == 0:
+            if not os.path.exists(os.path.join(path,  f'good_{number}.jpg')):
+                return f'good_{number}.jpg'
+            else:
+                return 3
+            
+        elif type == 2:
+            if not os.path.exists(os.path.join(path, f'regular_{number}.jpg')):
+                return f'regular_{number}.jpg'
+            else:
+                return 3
+            
+        elif type == 1:
+            if not os.path.exists(os.path.join(path, f'bad_{number}.jpg')):
+                return f'bad_{number}.jpg'
+            else:
+                return 3
 
 def CapturePosture(category:int, filename:list):
 

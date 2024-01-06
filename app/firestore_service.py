@@ -12,6 +12,23 @@ os.environ['GOOGLE_CLOUD_PROJECT'] = 'tesis-405201'
 # Now initialize the Firestore client
 db = firestore.client()
 
+def get_type(user_id):
+    # Referencia al documento del usuario
+    user_ref = db.collection('users').document(user_id)
+
+    # Obtiene los datos del documento
+    user_data = user_ref.get()
+
+    # Verifica si el documento existe
+    if user_data.exists:
+        # Accede al campo 'type' del documento
+        user_type = user_data.get('typeuser')
+        return user_type
+    else:
+        # Si el documento no existe, puedes manejarlo de acuerdo a tus necesidades
+        print(f'El usuario con ID {user_id} no existe.')
+        return None
+
 def get_users():
     return db.collection('users').get()
 
@@ -22,7 +39,8 @@ def user_put_data(user_data):
     user_ref = db.collection('users').document(user_data.username)
     user_ref.set({ 'password':user_data.password,
                   'email':user_data.email,
-                  'phone': user_data.phone })
+                  'phone': user_data.phone,
+                  'typeuser': user_data.typeuser,})
 
 def delete_user_by_id(user_id):
     user_ref = get_user_ref(user_id)
