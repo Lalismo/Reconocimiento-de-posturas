@@ -1,6 +1,6 @@
 from flask import Flask,send_from_directory, render_template, Response, request, make_response, redirect, abort, session, url_for, flash
 import unittest
-from flask_login import login_required, current_user
+from flask_login import login_required, current_user, login_fresh
 from app import create_app
 import os
 from capturaPosturas import CapturePosture
@@ -12,6 +12,7 @@ from modelo import exist_model, val_image
 from capturaPosturas import count_exist_file
 from werkzeug.security import generate_password_hash
 from app.models import UserModel, UserData
+
 
 #Iniciamos la llamada de nuestro app mandando a llamar nuestro create_app
 app = create_app()
@@ -111,13 +112,15 @@ def update_redirect():
     }
     return render_template('update.html', **context)
 
+
 @app.route('/signup_admin', methods=['GET', 'POST'])
-
 def signup_admin():
-
     signup_adminform = Signup_AdminForm()
+    username = current_user.id
     context = {
         'signup_admin_form': signup_adminform,
+        'user_type': get_type(username),
+        'username': username,
     }
     
     if signup_adminform.validate_on_submit():
@@ -132,14 +135,13 @@ def signup_admin():
             password_hash = generate_password_hash(password)
             user_data = UserData(username, password_hash, email, phone, typeuser)
             user_put_data(user_data)
-            user = UserModel(user_data)
-            flash(f'Usuario {username} creado correctamente!') 
+            
+            flash(f'Usuario {username} creado correctamente!')
             return redirect(url_for('signup_admin'))
         else:
             flash('El usuario ya existe!')
     
     return render_template('signup_admin.html', **context)
-
 
 
 
@@ -150,9 +152,6 @@ def update_user(user_id):
         phone = int(request.form.get('phone'))
         update_user_by_id(user_id=user_id, email=email, phone=phone)
     return redirect(url_for('hello'))
-
-
-
 
 
 @app.route('/upload', methods=['GET', 'POST'])
