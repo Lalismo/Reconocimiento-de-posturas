@@ -186,8 +186,7 @@ def upload():
         'list_of_bad_posture': list_of_bad_posture,
         'images_form' : images_form,
         'user_type': get_type(username),
-        'username': username,
-        'user_type': get_type(username)
+        'username': username
     }
     
     # Condicion para validar los datos ingresados en el formulario
