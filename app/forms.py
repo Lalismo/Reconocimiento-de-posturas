@@ -1,3 +1,4 @@
+from tkinter.tix import Select
 from flask_wtf import FlaskForm
 from wtforms.fields import StringField, PasswordField, SubmitField, IntegerField, FileField, EmailField, SelectField
 from wtforms.validators import DataRequired, NumberRange, InputRequired
@@ -32,5 +33,9 @@ class UpdateUserForm(FlaskForm):
     phone = IntegerField('Numero de telefono', validators = [DataRequired(),NumberRange(0000000000,9999999999)])
     submit = SubmitField('Actualizar')
 
-
+class ExperimentForm(FlaskForm):
+    steps = IntegerField('Pasos de los procesos', validators=[DataRequired(), NumberRange(1, 10000)])
+    layers = IntegerField('Capas de la Neurona',  validators=[DataRequired(), NumberRange(1, 10000)])
+    model = SelectField('Tipo de modelo', choices={('1', 'Modelo de color'), ('2', 'Modelo de escala de grises')}, coerce=int, validators={DataRequired()})
+    submit = SubmitField("Iniciar Experimentación")
     

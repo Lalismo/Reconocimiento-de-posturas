@@ -1,6 +1,3 @@
-CHINGUEN SU MADRE
-putos
-att. axl
 
 # Comandos para Entorno virtual
 # Forma 1
