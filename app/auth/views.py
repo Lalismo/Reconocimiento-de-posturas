@@ -1,9 +1,10 @@
-from flask import render_template, redirect, url_for, flash
+from fastapi import Cookie
+from flask import render_template, redirect, session, url_for, flash
 from app.forms import LoginForm
 from . import auth
 from app.firestore_service import get_user_by_id, user_put_data, get_type
 from app.models import UserModel, UserData
-from flask_login import login_user,login_required,logout_user
+from flask_login import login_user,login_required,logout_user, user_logged_out
 from werkzeug.security import generate_password_hash, check_password_hash
 
 @auth.route('/login', methods=['GET', 'POST'])
@@ -24,6 +25,8 @@ def login():
         
         if user_doc.to_dict() is not None:
             typeuser = get_type(username)
+            print(user_doc.to_dict()['password'])
+            print(password)
             # Ya se ha realizado el Login con anterioridad
             if check_password_hash(user_doc.to_dict()['password'], password):
                 user_data = UserData(username, password, email, phone, typeuser)
@@ -72,6 +75,7 @@ def signup():
 @login_required
 def logout():
     logout_user()
+    session.clear()
     flash('Regresa pronto')
     return redirect(url_for('auth.login'))
 
