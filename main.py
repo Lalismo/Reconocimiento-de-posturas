@@ -1,11 +1,12 @@
 from flask import Flask,send_from_directory, render_template, Response, request, make_response, redirect, abort, session, url_for, flash
 import unittest
-from flask_login import login_required, current_user, login_fresh
+from flask_login import fresh_login_required, login_required, current_user, login_fresh, login_manager
+import flask_login
 from app import create_app
 import os
 from capturaPosturas import CapturePosture
 from app.config import Config
-from app.forms import DeleteUserForm, UpdateUserForm, ImageForm, Signup_AdminForm
+from app.forms import DeleteUserForm, UpdateUserForm, ImageForm, Signup_AdminForm, ExperimentForm
 from app.firestore_service import  get_users, delete_user_by_id, update_user_by_id, get_type,get_user_by_id,user_put_data
 from flask_login import login_user
 from modelo import exist_model, val_image
@@ -49,6 +50,8 @@ def server_error(error):
     }
     return render_template('error.html', **context)
 
+
+
 #Indicación para poner la ruta,
 @app.route('/')
 #Declaramos función para el inicio de nuestra pagina
@@ -81,6 +84,7 @@ def camara():
 
 @app.route('/hello', methods=['GET'])
 @login_required
+@fresh_login_required
 def hello():
     user_ip = session.get('user_ip')
     username = current_user.id
@@ -96,11 +100,15 @@ def hello():
     return render_template('hello.html', **context)
 
 @app.route('/users/delete/<user_id>', methods=['POST'])
+@login_required
+@fresh_login_required
 def delete(user_id):
     delete_user_by_id(user_id=user_id)
     return redirect(url_for('hello'))
 
 @app.route('/update', methods=['GET'])
+@login_required
+@fresh_login_required
 def update_redirect():
     users = get_users() # Obtain all the users 
     user_ip = session.get('user_ip') # Obtain the Ip from the cookies
@@ -114,6 +122,8 @@ def update_redirect():
 
 
 @app.route('/signup_admin', methods=['GET', 'POST'])
+@login_required
+@fresh_login_required
 def signup_admin():
     signup_adminform = Signup_AdminForm()
     username = current_user.id
@@ -146,6 +156,8 @@ def signup_admin():
 
 
 @app.route('/users/<user_id>', methods=['GET' ,'POST'])
+@login_required
+@fresh_login_required
 def update_user(user_id):
     if request.method == 'POST':
         email = request.form.get('email')
@@ -155,10 +167,12 @@ def update_user(user_id):
 
 
 @app.route('/upload', methods=['GET', 'POST'])
+@login_required
+@fresh_login_required
 def upload():
     ''' Funcion para subir imagenes y visualizar el archivo '''
     images_form = ImageForm()
-    
+    username = current_user.id
     # Lista de los archivos que estan en las carpetas
     
     list_of_good_posture = os.listdir(app.config['IMAGE_GOOD_POSTURE']) 
@@ -171,6 +185,8 @@ def upload():
         'list_of_regular_posture' : list_of_regular_posture,
         'list_of_bad_posture': list_of_bad_posture,
         'images_form' : images_form,
+        'user_type': get_type(username),
+        'username': username
     }
     
     # Condicion para validar los datos ingresados en el formulario
@@ -179,6 +195,7 @@ def upload():
         filename = (file.filename) # Nombre del archivo
         file_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), app.config['IMAGE_VALIDATION'], filename) # Ruta donde se guardara el archivo            
         file.save(file_path) # Guardado de la imagen en la ruta que contiene la variable file_path
+        
             # Validacion de clasificacion de imagen
         if val_image(file_path) == 0:#Si la imagen coincide con el modelo se mete al primer if
             new_filename = count_exist_file(app.config['IMAGE_GOOD_POSTURE'], 0) # Obtencion del nombre del archivo conforme el archivo faltante en caso contrario se omite
@@ -215,6 +232,8 @@ def upload():
 
 
 @app.route('/update_image/<filename>/<category>')
+@login_required
+@fresh_login_required
 def update_images(filename, category):
     file_path = os.path.join(app.config['IMAGE_GOOD_POSTURE'], filename)
   
@@ -240,12 +259,16 @@ def update_images(filename, category):
     return redirect(url_for('upload'))
         
 @app.route('/create_images')
+@login_required
+@fresh_login_required
 def create_images():
     CapturePosture(0, '')
     flash('Imagenes creadas exitosamente')
     return redirect(url_for('upload'))
 
 @app.route('/delete_good/<filename>')
+@login_required
+@fresh_login_required
 def delete_good_image(filename):
     file_path = os.path.join(app.config['IMAGE_GOOD_POSTURE'], filename)
     if os.path.exists(file_path):
@@ -257,6 +280,8 @@ def delete_good_image(filename):
         return redirect(url_for('upload'))
 
 @app.route('/delete_regular/<filename>')
+@login_required
+@fresh_login_required
 def delete_regular_image(filename):
     file_path = os.path.join(app.config['IMAGE_REGULAR_POSTURE'], filename)
     if os.path.exists(file_path):
@@ -266,8 +291,10 @@ def delete_regular_image(filename):
     else:
         flash('Imagen no encontrada')
         return redirect(url_for('upload'))
-    
+
 @app.route('/delete_bad/<filename>')
+@login_required
+@fresh_login_required
 def delete_bad_image(filename):
     file_path = os.path.join(app.config['IMAGE_BAD_POSTURE'], filename)
     if os.path.exists(file_path):
@@ -278,6 +305,33 @@ def delete_bad_image(filename):
         flash('Imagen no encontrada')
         return redirect(url_for('upload'))
 
+@app.route('/experimentation', methods=["GET", "POST"])
+@login_required
+@fresh_login_required
+def experimentacion():
+    experiment_form = ExperimentForm()
+    username = current_user.id
+    
+    context = {
+        'experiment_form' : experiment_form,
+        'user_type': get_type(username),
+        'username': username,
+        'user_type': get_type(username)
+    }
+    
+    if experiment_form.validate_on_submit():
+        capas = experiment_form.layers.data
+        pasos = experiment_form.steps.data
+        modelo = experiment_form.model.data
+        
+        return redirect(url_for('experimentacion'))
+    
+    return render_template('experimentacion.html', **context)
+
+@app.after_request
+def add_header(response):
+    response.cache_control.no_store = True
+    return response
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True)

@@ -5,9 +5,14 @@ from firebase_admin import credentials
 from firebase_admin import firestore
 
 credential = credentials.ApplicationDefault()
-firebase_admin.initialize_app(credential)
+project_id = 'tesis-405201'
 
-os.environ['GOOGLE_CLOUD_PROJECT'] = 'tesis-405201'
+firebase_admin.initialize_app(credential, {
+    'projectId': project_id,
+})
+
+#os.environ['GOOGLE_CLOUD_PROJECT'] = 'tesis-405201'
+#os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = os.path.join(os.path.dirname(__file__), 'tesis-405201-1014ac04e96c.json')
 
 # Now initialize the Firestore client
 db = firestore.client()
