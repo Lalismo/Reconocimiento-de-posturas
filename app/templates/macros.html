@@ -11,7 +11,6 @@
 <li class="list-group-item" style="background-color: rgb(63, 58, 58);" >
     user: {{ user.id }}
     email: {{ user.to_dict().email }}
-    phone: {{ user.to_dict().phone }}
     {{ wtf.quick_form(delete_form, action=url_for('delete', user_id=user.id)) }}
 
     <button ><a href="{{ url_for('update_redirect') }}">Actualizar</a></button>

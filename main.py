@@ -13,6 +13,8 @@ from modelo import exist_model, val_image
 from capturaPosturas import count_exist_file
 from werkzeug.security import generate_password_hash
 from app.models import UserModel, UserData
+from modeloExperimentacion import entrenamiento as modeloRGB
+from modeloGrayExperimentacion import entrenamiento as modeloGREY
 
 
 #Iniciamos la llamada de nuestro app mandando a llamar nuestro create_app
@@ -137,13 +139,12 @@ def signup_admin():
         username = signup_adminform.username.data
         password = signup_adminform.password.data
         email = signup_adminform.email.data
-        phone = signup_adminform.phone.data
         typeuser = signup_adminform.type_user.data
         
         user_doc = get_user_by_id(username)
         if user_doc.to_dict() is None:
             password_hash = generate_password_hash(password)
-            user_data = UserData(username, password_hash, email, phone, typeuser)
+            user_data = UserData(username, password_hash, email, typeuser)
             user_put_data(user_data)
             
             flash(f'Usuario {username} creado correctamente!')
@@ -161,8 +162,7 @@ def signup_admin():
 def update_user(user_id):
     if request.method == 'POST':
         email = request.form.get('email')
-        phone = int(request.form.get('phone'))
-        update_user_by_id(user_id=user_id, email=email, phone=phone)
+        update_user_by_id(user_id=user_id, email=email )
     return redirect(url_for('hello'))
 
 
@@ -320,12 +320,20 @@ def experimentacion():
     }
     
     if experiment_form.validate_on_submit():
-        capas = experiment_form.layers.data
+        epocas = experiment_form.epochs.data
         pasos = experiment_form.steps.data
         modelo = experiment_form.model.data
         
+        if (modelo == 1):
+            modeloRGB(epocas, pasos)
+        elif (modelo == 2):
+            modeloGREY(epocas, pasos)
+        else:
+            flash('Ocurrio un error inesperado..')
+            return redirect(url_for('experimentacion'))
+        
         return redirect(url_for('experimentacion'))
-    
+
     return render_template('experimentacion.html', **context)
 
 @app.after_request

@@ -153,7 +153,7 @@ def CapturePosture(category:int, filename:list):
 
             angle_text_string = 'Neck : ' + str(int(neck_inclination)) + '  Torso : ' + str(int(torso_inclination))
 
-            if  neck_inclination < 20 and neck_inclination > 0 and torso_inclination < 5 and torso_inclination > 0  and count_files_by_extension(goodposture, 'jpg') < 250:
+            if  neck_inclination < 20 and neck_inclination > 0 and torso_inclination < 5 and torso_inclination > 0  and count_files_by_extension(goodposture, 'jpg') < 500:
                 good_frames += 1
 
                 cv2.putText(image, angle_text_string, (10, 30), font, 0.9, light_green, 2)
@@ -178,12 +178,15 @@ def CapturePosture(category:int, filename:list):
                 if good_frames<11:#se toman de las primeras 10 imagenes que se capturan de la camara
                     img_val_filename = os.path.join(val_good, 'good_{}.jpg'.format(total_good_postures))
                     if not os.path.exists(img_val_filename):
-                        cv2.imwrite(img_val_filename, image)
+                        if (count_files_by_extension(goodposture, 'jpg') <250):
+                            cv2.imwrite(img_filename, image)
+                        else:
+                            cv2.imwrite(img_filename, cv2.flip(image, 1))
                 
                 # Cada vez que se detecta una buena postura, aumenta el contador de buenas posturas
                 total_good_postures += 1
                 
-            elif neck_inclination < 40 and neck_inclination > 20 and torso_inclination < 10 and torso_inclination > 5 and count_files_by_extension(regularposture, 'jpg') < 250:
+            elif neck_inclination < 40 and neck_inclination > 20 and torso_inclination < 10 and torso_inclination > 5 and count_files_by_extension(regularposture, 'jpg') < 500:
 
                 regular_frames += 1
                 cv2.putText(image, angle_text_string, (10, 30), font, 0.9, yellow, 2)
@@ -204,7 +207,10 @@ def CapturePosture(category:int, filename:list):
                     cv2.imwrite(img_filename, image)
                     break
                 elif not os.path.exists(img_filename): # Insert
-                    cv2.imwrite(img_filename, image)
+                    if (count_files_by_extension(regularposture, 'jpg') <250):
+                        cv2.imwrite(img_filename, image)
+                    else:
+                        cv2.imwrite(img_filename, cv2.flip(image, 1))
 
                     
                 if regular_frames<11:#se toman de las primeras 10 imagenes que se capturan de la camara
@@ -214,7 +220,7 @@ def CapturePosture(category:int, filename:list):
                 
                 total_regular_posture += 1
                 
-            elif count_files_by_extension(badposture, 'jpg') < 250:
+            elif count_files_by_extension(badposture, 'jpg') < 500:
                   
                 bad_frames += 1
                 cv2.putText(image, angle_text_string, (10, 30), font, 0.9, red, 2)
@@ -227,16 +233,19 @@ def CapturePosture(category:int, filename:list):
                 
                 if category == 3: # Bad
                     img_filename = os.path.join(badposture, filename)
-                else: # Insertar
+                else : # Insertar
                     img_filename = os.path.join(badposture, 'bad_{}.jpg'.format(total_bad_postures))
 
-
+    
                 if not os.path.exists(img_filename) and category == 3: # Actualizar
                     cv2.imwrite(img_filename, image)
                     break
                 elif not os.path.exists(img_filename): # Insertar
-                    cv2.imwrite(img_filename, image)
-                
+                    if (count_files_by_extension(badposture, 'jpg') <250):
+                        cv2.imwrite(img_filename, image)
+                    else:
+                        cv2.imwrite(img_filename, cv2.flip(image, 1))
+                        
                 
                 if bad_frames<11:#se toman de las primeras 10 imagenes que se capturan de la camara
                     img_val_filename = os.path.join(val_bad, 'bad_{}.jpg'.format(total_bad_postures))
@@ -247,13 +256,14 @@ def CapturePosture(category:int, filename:list):
             print(count_files_by_extension(goodposture, 'jpg'))
             print(count_files_by_extension(regularposture, 'jpg'))
             print(count_files_by_extension(badposture, 'jpg'))
+            
         # Display the image
         cv2.imshow('frame', image)
         print(count_files_by_extension(goodposture, 'jpg'))
         print(count_files_by_extension(regularposture, 'jpg'))
         print(count_files_by_extension(badposture, 'jpg'))
         #Paro generico para insercion de frames
-        if count_files_by_extension(goodposture, 'jpg') == 250 and count_files_by_extension(regularposture, 'jpg') == 250 and count_files_by_extension(badposture, 'jpg') == 250 or cv2.waitKey(1) & 0xFF == ord('q'):
+        if count_files_by_extension(goodposture, 'jpg') == 500 and count_files_by_extension(regularposture, 'jpg') == 500 and count_files_by_extension(badposture, 'jpg') == 500 or cv2.waitKey(1) & 0xFF == ord('q'):
             cap.release()
             cv2.destroyAllWindows()
             break

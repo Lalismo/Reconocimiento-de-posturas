@@ -41,7 +41,7 @@
 
 
                 
-                {% if current_user.is_authenticated and user_type == 2 %}
+                {% if current_user.is_authenticated and user_type == 1 %}
                 
                     <li><a href="{{ url_for('index') }}">Inicio</a></li>
                     <li><a href="{{ url_for('upload') }}">Imagenes</a></li>

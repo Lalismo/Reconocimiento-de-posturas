@@ -18,7 +18,6 @@ def login():
         username = login_form.username.data
         password = login_form.password.data
         email = login_form.email.data
-        phone = login_form.phone.data
 
 
         user_doc = get_user_by_id(username)
@@ -29,7 +28,7 @@ def login():
             print(password)
             # Ya se ha realizado el Login con anterioridad
             if check_password_hash(user_doc.to_dict()['password'], password):
-                user_data = UserData(username, password, email, phone, typeuser)
+                user_data = UserData(username, password, email, typeuser)
                 user = UserModel(user_data)
                 flash(f'Bienvenido de nuevo {username}') # le cambie
                 login_user(user)
@@ -53,13 +52,12 @@ def signup():
         username = signup_form.username.data
         password = signup_form.password.data
         email = signup_form.email.data
-        phone = signup_form.phone.data
         typeuser = 2
         
         user_doc = get_user_by_id(username)
         if user_doc.to_dict() is None:
             password_hash = generate_password_hash(password)
-            user_data = UserData(username, password_hash, email, phone, typeuser)
+            user_data = UserData(username, password_hash, email, typeuser)
             user_put_data(user_data)
             user = UserModel(user_data)
             login_user(user)

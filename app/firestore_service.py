@@ -11,9 +11,6 @@ firebase_admin.initialize_app(credential, {
     'projectId': project_id,
 })
 
-#os.environ['GOOGLE_CLOUD_PROJECT'] = 'tesis-405201'
-#os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = os.path.join(os.path.dirname(__file__), 'tesis-405201-1014ac04e96c.json')
-
 # Now initialize the Firestore client
 db = firestore.client()
 
@@ -44,7 +41,6 @@ def user_put_data(user_data):
     user_ref = db.collection('users').document(user_data.username)
     user_ref.set({ 'password':user_data.password,
                   'email':user_data.email,
-                  'phone': user_data.phone,
                   'typeuser': user_data.typeuser,})
 
 def delete_user_by_id(user_id):
@@ -54,22 +50,11 @@ def delete_user_by_id(user_id):
 def get_user_ref(user_id):
     return db.collection('users').document(user_id)    
 
-def update_user_by_id(user_id, email, phone):
+def update_user_by_id(user_id, email):
     user_ref = _get_user_ref(user_id)
     user_ref.update(
-        {'email': email,
-        'phone': phone}
+        {'email': email,}
     )
 
 def _get_user_ref(user_id):
     return db.document(f'users/{user_id}')
-
-
-# def get_todos(user_id):
-#     return db.collection('users')\
-#         .document(user_id)\
-#         .collection('todos').get()
-        
-# def put_todo(user_id, description):
-#     todos_collection_ref = db.collection('users').document(user_id).collection('todos')
-#     todos_collection_ref.add({'description': description, 'done':False})

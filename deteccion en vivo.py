@@ -1,55 +1,55 @@
 import cv2
-import numpy as np
+from keras.preprocessing import image
 from keras.models import load_model
-#from tensorflow.keras.preprocessing.image import img_to_array
-import tensorflow
-from keras.applications.mobilenet_v2 import preprocess_input
-import os
+from keras.preprocessing.image import img_to_array
+import numpy as np
 
 # Cargar el modelo y pesos previamente entrenados
-modelo = os.path.join(os.path.dirname(__file__), "cnn.h5")
-pesos = os.path.join(os.path.dirname(__file__), "cnn_pesos.h5")
+modelo = load_model("cnn.h5")
+pesos = "cnn_pesos.h5"
+modelo.load_weights(pesos)
 
-cnn = load_model(modelo)
-cnn.load_weights(pesos)
-
-# Crear un objeto de captura de video desde la cámara (0 representa la cámara predeterminada)
-cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+# Iniciar la captura de video desde la cámara
+cap = cv2.VideoCapture(0)
 
 while True:
-    ret, frame = cap.read()  # Capturar un cuadro de video
-    if not ret:
-        break
+    ret, frame = cap.read()
 
-    # Preprocesar el cuadro de video (ajustar tamaño, normalizar, etc.)
-    frame = cv2.resize(frame, (50, 50))  # Ajustar al tamaño de entrada de tu modelo
-    #frame = tensorflow.keras.utils.img_to_array(frame)
-    frame = np.expand_dims(frame, axis=0)
-    frame = preprocess_input(frame)
+    # Ajustar el tamaño de la imagen según los requisitos del modelo
+    img = cv2.resize(frame, (50, 50))
+    img_array = image.img_to_array(img)
+    img_array = np.expand_dims(img_array, axis=0)
+    img_array = img_array / 255.0  # Normalizar la imagen
 
-    # Realizar la predicción utilizando el modelo
-    prediction = cnn.predict(frame)
-
-    # Determinar la clase predicha
-    arg_max = np.argmax(prediction[0])
-    if arg_max == 0:
+    # Realizar la predicción
+    predictions = modelo.predict(img_array)
+    pred = np.argmax(predictions)
+    print(pred)    
+    if pred == 0:
         label = "Buena"
-    elif arg_max == 1:
+    elif pred == 1:
         label = "Mala"
-    elif arg_max == 2:
+    elif pred == 2:
         label = "Regular"
-    else: 
+    else:
         label = "Desconocida"
 
-    # Mostrar el resultado en el cuadro de video
-    cv2.putText(frame, label, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-    
-    cv2.imshow('DetecciOn en Vivo', frame)
+    # Mostrar el resultado en la ventana de la cámara
+    if (label == "Buena"):
+        cv2.putText(frame, f'Posture: {label}', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+    elif (label == "Mala"):
+        cv2.putText(frame, f'Posture: {label}', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+    elif (label == "Regular"):
+        cv2.putText(frame, f'Posture: {label}', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2)
+    else:
+        cv2.putText(frame, f'Posture: {label}', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (128, 128, 128), 2)
+        
+    cv2.imshow('Posture Detection', frame)
 
-    # Romper el bucle si se presiona la tecla 'q'
+    # Salir del bucle si se presiona la tecla 'q'
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
-# Liberar la captura de video y cerrar todas las ventanas
+# Liberar la captura de video y cerrar la ventana
 cap.release()
 cv2.destroyAllWindows()

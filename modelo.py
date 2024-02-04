@@ -140,8 +140,9 @@ def entrenamiento():
 
   else:
 
+    
     #Elegir la imagen a clasificar    
-    imagen= os.path.join(val, 'Putita_de_acl_zorrita_bastarda.jpg')
+    imagen= os.path.join(val, "Good_Posture",'good_3.jpg')
 
     altura,anchura=50,50    
     modelo= os.path.join(os.path.dirname(__file__), "cnn.h5")   
@@ -215,11 +216,7 @@ def val_image(val_path):
         arg_max == 3
     return arg_max
   
- 
-    
-   
- 
-
+  
 if __name__ == '__main__':
   entrenamiento()
 
