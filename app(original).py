@@ -1,4 +1,4 @@
-from flask import Flask, render_template, Response,request,make_response,redirect,abort,session,url_foor
+from flask import Flask, render_template, Response,request,make_response,redirect,abort,session,url_for
 from camera import VideoCamera
 
 

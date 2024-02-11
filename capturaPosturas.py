@@ -35,6 +35,7 @@ def count_files_by_extension(dirname, extension):
 
 def count_exist_file(path, type):
     
+    ''' Busca y encuentra el nombre del archivo que no existe dentro de la carpeta, retornando el nombre del archivo'''
     for number in range(1, 251):
         if type == 0:
             if not os.path.exists(os.path.join(path,  f'good_{number}.jpg')):
@@ -121,23 +122,17 @@ def CapturePosture(category:int, filename:list):
         success, image = cap.read()
         if not success:
             break
-        
-        # shape of image (height, width)
+
         h, w, _ = image.shape
         
-        # values of color of the image
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        
-        # api library of pose recognition 
         keypoints = pose.process(image)
         image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
         
-        # detect and highlight the points of the shoulder and back points
         lm = keypoints.pose_landmarks
         lmPose = mp_pose.PoseLandmark
         
         if lm:
-            # Obtain the pixels
             l_shldr_x = int(lm.landmark[lmPose.LEFT_SHOULDER].x * w)
             l_shldr_y = int(lm.landmark[lmPose.LEFT_SHOULDER].y * h)
             r_shldr_x = int(lm.landmark[lmPose.RIGHT_SHOULDER].x * w)

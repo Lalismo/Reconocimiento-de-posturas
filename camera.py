@@ -3,7 +3,6 @@ import time
 import math as m
 import mediapipe as mp
 
-# face_cascade=cv2.CascadeClassifier("haarcascade_frontalface_alt2.xml")
 
 # Calculo de distancia
 def findDistance(x1, y1, x2, y2):

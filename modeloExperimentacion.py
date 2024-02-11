@@ -37,7 +37,7 @@ def entrenamiento(epocas, pasos):
   # Primera convolución   
   kernels_capa1 = 32    
   size_kernels1 = (3, 3)    
-  # Primera Convolución:    
+  # Segunda Convolución:    
   kernels_capa2 = 64    
   size_kernels2 = (3, 3)    
   pooling_size = (2, 2)   
@@ -81,7 +81,7 @@ def entrenamiento(epocas, pasos):
     # Conectar los datos con una MLP o perceptrón multicapa   
     # 256 se refiere a las neuronas   
     cnn.add(tf.keras.layers.Dense(256, activation="relu"))    
-    cnn.add(tf.keras.layers.Dense(256, activation="relu"))    
+    #cnn.add(tf.keras.layers.Dense(256, activation="relu"))    
 
     # Sirve para el sobreentrenamiento    
     cnn.add(tf.keras.layers.Dropout(0.5))  # Porcentaje para apagar las neuronas sobre la capa oculta   
@@ -192,9 +192,12 @@ def entrenamiento(epocas, pasos):
       # Obtener las métricas de validación
       val_accuracy = cnn.fit['val_categorical_accuracy']
 
+      loss = cnn.fit['loss']
+      
       # Imprimir las métricas
       print(f'Training Accuracy: {train_accuracy[-1]}')
       print(f'Validation Accuracy: {val_accuracy[-1]}')
+      print(f'')
    
     return current_time, train_accuracy[-1], val_accuracy[-1]
 
@@ -236,11 +239,6 @@ def val_image(val_path):
         print("NADA")
         arg_max == 3
     return arg_max
-  
- 
-    
-   
- 
 
 if __name__ == '__main__':
   entrenamiento()
