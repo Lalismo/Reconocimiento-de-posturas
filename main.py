@@ -1,18 +1,15 @@
 from flask import Flask,send_from_directory, render_template, Response, request, make_response, redirect, abort, session, url_for, flash
 import unittest
-from flask_login import fresh_login_required, login_required, current_user, login_fresh, login_manager
-import flask_login
+from flask_login import fresh_login_required, login_required, current_user, login_fresh, login_manager, login_user
 from app import create_app
 import os
-from capturaPosturas import CapturePosture
+from capturaPosturas import CapturePosture, count_exist_file, count_files_by_extension
 from app.config import Config
 from app.forms import DeleteUserForm, UpdateUserForm, ImageForm, Signup_AdminForm, ExperimentForm
 from app.firestore_service import  get_users, delete_user_by_id, update_user_by_id, get_type,get_user_by_id,user_put_data
-from flask_login import login_user
 from modelo import exist_model, val_image
-from capturaPosturas import count_exist_file
 from werkzeug.security import generate_password_hash
-from app.models import UserModel, UserData
+from app.models import UserData
 from modeloExperimentacion import entrenamiento as modeloRGB
 from modeloGrayExperimentacion import entrenamiento as modeloGREY
 
@@ -20,6 +17,7 @@ from modeloGrayExperimentacion import entrenamiento as modeloGREY
 #Iniciamos la llamada de nuestro app mandando a llamar nuestro create_app
 app = create_app()
 
+app.config['DATA'] = (r".\app\static\Data")
 app.config['IMAGE_VALIDATION'] = (r".\app\static\Data\Validation")
 app.config['IMAGE_GOOD_POSTURE'] = (r".\app\static\Data\Training\Good_Posture")
 app.config['IMAGE_REGULAR_POSTURE'] = (r".\app\static\Data\Training\Regular_Posture")
@@ -42,7 +40,7 @@ def not_found(error):
 @app.route('/error')
 def error_500():
     abort(500)
-    
+
 @app.errorhandler(500)
 def server_error(error):
     context = {
@@ -51,7 +49,6 @@ def server_error(error):
         'status':500
     }
     return render_template('error.html', **context)
-
 
 
 #Indicación para poner la ruta,
@@ -90,8 +87,8 @@ def camara():
 def hello():
     user_ip = session.get('user_ip')
     username = current_user.id
-    delete_form = DeleteUserForm()
-
+    delete_form = DeleteUserForm()   
+    
     context = {
         'user_ip': user_ip,
         'username': username,
@@ -311,29 +308,35 @@ def delete_bad_image(filename):
 def experimentacion():
     experiment_form = ExperimentForm()
     username = current_user.id
+    good = app.config['IMAGE_GOOD_POSTURE']
+    regular = app.config['IMAGE_REGULAR_POSTURE']
+    bad = app.config['IMAGE_BAD_POSTURE']
     
     context = {
-        'experiment_form' : experiment_form,
-        'user_type': get_type(username),
-        'username': username,
-        'user_type': get_type(username)
-    }
+            'experiment_form' : experiment_form,
+            'user_type': get_type(username),
+            'username': username,
+        }
     
-    if experiment_form.validate_on_submit():
-        epocas = experiment_form.epochs.data
-        pasos = experiment_form.steps.data
-        modelo = experiment_form.model.data
+    if exist_model() and count_files_by_extension(good, 'jpg') == 500 and count_files_by_extension(regular, 'jpg') == 500 and count_files_by_extension(bad, 'jpg') == 500:
         
-        if (modelo == 1):
-            modeloRGB(epocas, pasos)
-        elif (modelo == 2):
-            modeloGREY(epocas, pasos)
-        else:
-            flash('Ocurrio un error inesperado..')
-            return redirect(url_for('experimentacion'))
-        
-        return redirect(url_for('experimentacion'))
+        if experiment_form.validate_on_submit():
+            epocas = experiment_form.epochs.data
+            pasos = experiment_form.steps.data
+            modelo = experiment_form.model.data
 
+            if (modelo == 1):
+                modeloRGB(epocas, pasos)
+            elif (modelo == 2):
+                modeloGREY(epocas, pasos)
+            else:
+                flash('Ocurrio un error inesperado..')
+                return redirect(url_for('experimentacion'))
+
+            return redirect(url_for('experimentacion'))
+    else:
+        flash('No se puede usar el modulo de experimentación debido a la falta de imagenes o inexistencia en las categorías', category='error')
+    
     return render_template('experimentacion.html', **context)
 
 @app.after_request

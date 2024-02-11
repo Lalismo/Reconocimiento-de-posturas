@@ -129,11 +129,11 @@ def entrenamiento():
     if arg_max==0:
       print("Good posture")    
     elif arg_max==1:
-      print("Regular posture") 
+      print("Bad posture") 
     elif arg_max==2:
-      print("Bad posture")
+      print("Regular posture")
     else:
-      print("Empty")
+      print("NADA")
       arg_max=3
 
     return current_time
