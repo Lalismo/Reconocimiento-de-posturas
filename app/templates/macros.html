@@ -8,7 +8,7 @@
 
 
 {% macro render_user(user, delete_form) %}
-<li class="list-group-item" style="background-color: rgb(63, 58, 58);" >
+<li class="list-group-item" style="background-color: rgb(63, 58, 58);">
     user: {{ user.id }}
     email: {{ user.to_dict().email }}
     {{ wtf.quick_form(delete_form, action=url_for('delete', user_id=user.id)) }}
@@ -19,7 +19,9 @@
 
 
 {% macro render_user_update(user, update_form) %}
-<li class="list-group-item">
+<li class="list-group-item" style="background-color: rgb(63, 58, 58);">
+    Usuario: {{ user.id }}
+  
     {{ wtf.quick_form(update_form, action=url_for('update_user', user_id=user.id ), method='post') }}
 </li>
 

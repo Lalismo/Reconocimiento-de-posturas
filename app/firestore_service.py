@@ -47,6 +47,8 @@ def delete_user_by_id(user_id):
     user_ref = get_user_ref(user_id)
     user_ref.delete()
    
+  
+   
 def get_user_ref(user_id):
     return db.collection('users').document(user_id)    
 

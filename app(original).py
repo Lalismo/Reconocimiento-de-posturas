@@ -23,7 +23,7 @@ def gen(camera):
 def camara():
     return Response(gen(VideoCamera()),mimetype='multipart/x-mixed-replace; boundary=frame')
 
-#Codigos para inicio de sesión
 
+#Codigos para inicio de sesión
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True)

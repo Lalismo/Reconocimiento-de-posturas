@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block  title%} {{ super() }} Monitorización {% endblock  %}
+
+{% block  content%}
+
+<style type="text/css">
+    .cancelar{
+        margin-top: 50px;
+        height: 100px;
+        width: 200px;
+        background: #DC143C;
+        color: white;
+        font-size: 20px;
+    }
+   
+   </style>
+
+
+<center><h1>Modulo de Monitorización</h1></center>
+
+<center><img src="{{ url_for('video_feed') }}" alt="Posture Detection"></center>
+<center>
+<button class="cancelar">Cerrar Monitorización</button >
+</center>
+
+{% endblock  %}

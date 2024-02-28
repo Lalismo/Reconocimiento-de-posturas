@@ -2,8 +2,10 @@ from flask import Flask,send_from_directory, render_template, Response, request,
 import unittest
 from flask_login import fresh_login_required, login_required, current_user, login_fresh, login_manager, login_user
 from app import create_app
+from deteccionEnVivo import deteccion_en_vivo
 import os
 from capturaPosturas import CapturePosture, count_exist_file, count_files_by_extension
+#from deteccionEnVivo import deteccion_en_vivo
 from app.config import Config
 from app.forms import DeleteUserForm, UpdateUserForm, ImageForm, Signup_AdminForm, ExperimentForm
 from app.firestore_service import  get_users, delete_user_by_id, update_user_by_id, get_type,get_user_by_id,user_put_data
@@ -12,6 +14,7 @@ from werkzeug.security import generate_password_hash
 from app.models import UserData
 from modeloExperimentacion import entrenamiento as modeloRGB
 from modeloGrayExperimentacion import entrenamiento as modeloGREY
+
 
 
 #Iniciamos la llamada de nuestro app mandando a llamar nuestro create_app
@@ -338,6 +341,24 @@ def experimentacion():
         flash('No se puede usar el modulo de experimentación debido a la falta de imagenes o inexistencia en las categorías', category='error')
     
     return render_template('experimentacion.html', **context)
+
+@app.route('/camara')
+@login_required
+@fresh_login_required
+def camara():
+    username = current_user.id
+    context = {
+        'user_type': get_type(username),
+        'username': username,
+    }
+    return render_template('monitorización.html', **context)
+
+@app.route('/video_feed')
+@login_required
+@fresh_login_required
+def video_feed():
+    return Response(deteccion_en_vivo(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
 
 @app.after_request
 def add_header(response):
