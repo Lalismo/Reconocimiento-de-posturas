@@ -36,4 +36,8 @@ class ExperimentForm(FlaskForm):
     epochs = IntegerField('Epocas de la red neuronal',  validators=[DataRequired(), NumberRange(1, 10000)])
     model = SelectField('Tipo de modelo', choices={('1', 'Modelo de color'), ('2', 'Modelo de escala de grises')}, coerce=int, validators={DataRequired()})
     submit = SubmitField("Iniciar Experimentación")
+
+class Restart_Form(FlaskForm):
+    username = StringField('Nombre de usuario', validators=[DataRequired()])
+    email = EmailField('Correo de usuario', validators=[DataRequired()])
     

@@ -7,14 +7,16 @@ import os
 from capturaPosturas import CapturePosture, count_exist_file, count_files_by_extension
 #from deteccionEnVivo import deteccion_en_vivo
 from app.config import Config
-from app.forms import DeleteUserForm, UpdateUserForm, ImageForm, Signup_AdminForm, ExperimentForm
-from app.firestore_service import  get_users, delete_user_by_id, update_user_by_id, get_type,get_user_by_id,user_put_data
+from app.forms import DeleteUserForm, UpdateUserForm, ImageForm, Signup_AdminForm, ExperimentForm, Restart_Form
+from app.firestore_service import  get_users, delete_user_by_id, update_user_by_id, get_type, get_user_by_id, user_put_data, update_password
 from modelo import exist_model, val_image
 from werkzeug.security import generate_password_hash
 from app.models import UserData
 from modeloExperimentacion import entrenamiento as modeloRGB
 from modeloGrayExperimentacion import entrenamiento as modeloGREY
-
+import yagmail
+from random import shuffle, choice
+import string
 
 
 #Iniciamos la llamada de nuestro app mandando a llamar nuestro create_app
@@ -358,6 +360,52 @@ def camara():
 @fresh_login_required
 def video_feed():
     return Response(deteccion_en_vivo(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+@app.route('/restart_password', methods=['GET', 'POST'])
+def restart_password():
+    restart_form = Restart_Form()
+    context = {
+        'restart_form':restart_form,
+    }
+    if restart_form.validate_on_submit() and (get_user_by_id(username)):
+            
+            email_send = 'coao202495@upemor.edu.com'
+            cont = 'qemelmwvyarwjlri'
+
+            email = restart_form.email.data
+            username = restart_form.username.data
+            new_password = generate_password()   
+            
+            yag = yagmail.SMTP(user = email_send, password = cont)
+
+            destinatarios = [email]
+            asunto = 'Restablecimiento de contraseña Sistema Correctivo de Postura'
+            mensaje = f'Su nueva contraseña es: {new_password}'
+            #html = '<h1><center><center><h1>'
+            #archivo = ''
+
+            #yag.send(destinatarios, asunto, [mensaje,html], attachments = [archivo])
+            yag.send(destinatarios, asunto, mensaje)
+
+            update_password(username, new_password)
+
+            flash('Su contraseña ha sido restablecida correctamente, se ha enviado un correo')
+            return redirect('hello')
+    
+    else:
+        flash("El usuario ingresado no existe o los datos ingresados son incorrectos", category = 'error')
+        
+            
+        return render_template('restart_password.html', **context)
+
+
+def generate_password():
+    all  = list(string.ascii_lowercase) + list(string.ascii_uppercase) + list(string.digits)
+    shuffle(all)
+    new_password = ''
+    for _ in range(10):
+        new_password += choice(all)
+    return new_password
 
 
 @app.after_request
