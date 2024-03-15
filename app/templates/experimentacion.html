@@ -5,9 +5,62 @@
 
 {% block  content%}
 
+<style>
+
+    #progress {
+        width: 100%;
+        background-color: #f0f0f0;
+        border-radius: 5px;
+        margin-top: 20px;
+    }
+    
+    #progress-bar {
+        height: 20px;
+        width: 0;
+        background-color: #4caf50;
+        border-radius: 5px;
+    }
+
+</style>
+
 <center><h1>Modulo de Experimentación</h1></center>
     <div class="container">
         {{ wtf.quick_form(experiment_form) }}
     </div>
+
+    <div id="progress" style="display: none;">
+        <div id="progress-bar"></div>
+    </div>
+  
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+    var progressBar = document.getElementById('progress-bar');
+    var form = document.querySelector('form');
+
+    form.addEventListener('submit', function() {
+
+    
+        // Inicializar la barra de progreso
+        var width = 0;
+        var epochs = document.getElementById('epochs').value;
+        progressBar.style.width = width + '%';
+
+        // Configurar el progreso de las épocas
+        var epoch = 0; // Inicializamos la época en 0
+
+        // Simular progreso
+        var interval = setInterval(function() {
+            if (epoch >= epochs) {
+                clearInterval(interval);
+            } else {
+                epoch += 1;  // Incrementamos el número de época
+                var progress = (epoch / epochs) * 100; // Calcula el progreso en porcentaja
+                progressBar.style.width = epoch + '%';
+            }
+        }, 50);
+    });
+}); 
+</script>
 
 {% endblock  %}

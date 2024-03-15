@@ -5,10 +5,36 @@
 
 {% block  content%}
 
+<style>
+    .primary-button{
+        background-color: background-color: rgb(63, 58, 58);;
+        border-radius: 8px;
+        border: none;
+        color: white;
+        width: 100%;
+        cursor: pointer;
+        font-size: 400;
+        font-weight: bold;
+        height: 50px;
+    }
+    .login-button{
+        margin-top: 14px;
+        margin-bottom: 30px;
+    }
+
+    a:hover{
+        text-decoration: none;
+    }
+</style>
+
 <center><h1>Inicia sesión en tu cuenta</h1></center>
     <div class="container">
         {{ wtf.quick_form(login_form) }}
     </div>
 
-    <li><a href="{{ url_for('restart_password') }}">Recuperación Contraseña</a></li>
+    
+    <button class="primary-button login-button"> <a href="{{ url_for('restart_password') }}">Recuperación Contraseña</a></button>
+
+   
+  
 {% endblock  %}

@@ -1,4 +1,4 @@
-from flask import Flask,send_from_directory, render_template, Response, request, make_response, redirect, abort, session, url_for, flash
+from flask import Flask,send_from_directory, render_template, Response, request, make_response, redirect, abort, session, url_for, flash, jsonify
 import unittest
 from flask_login import fresh_login_required, login_required, current_user, login_fresh, login_manager, login_user
 from app import create_app
@@ -9,7 +9,7 @@ from capturaPosturas import CapturePosture, count_exist_file, count_files_by_ext
 from app.config import Config
 from app.forms import DeleteUserForm, UpdateUserForm, ImageForm, Signup_AdminForm, ExperimentForm, Restart_Form
 from app.firestore_service import  get_users, delete_user_by_id, update_user_by_id, get_type, get_user_by_id, user_put_data, update_password
-from modelo import exist_model, val_image
+from modelo import exist_model, val_image, entrenamiento
 from werkzeug.security import generate_password_hash
 from app.models import UserData
 from modeloExperimentacion import entrenamiento as modeloRGB
@@ -17,7 +17,13 @@ from modeloGrayExperimentacion import entrenamiento as modeloGREY
 import yagmail
 from random import shuffle, choice
 import string
+import multiprocessing 
+from keras.callbacks import Callback
 
+class EpochLogger(Callback):
+    def on_epoch_end(self, epoch, logs=None):
+        epoch + 1
+        return epoch
 
 #Iniciamos la llamada de nuestro app mandando a llamar nuestro create_app
 app = create_app()
@@ -172,15 +178,20 @@ def update_user(user_id):
 @login_required
 @fresh_login_required
 def upload():
+    ALLOWED_EXTENSIONS = {'jpg'}
     ''' Funcion para subir imagenes y visualizar el archivo '''
     images_form = ImageForm()
     username = current_user.id
     # Lista de los archivos que estan en las carpetas
     
-    list_of_good_posture = os.listdir(app.config['IMAGE_GOOD_POSTURE']) 
-    list_of_regular_posture = os.listdir(app.config['IMAGE_REGULAR_POSTURE']) 
-    list_of_bad_posture =os.listdir(app.config['IMAGE_BAD_POSTURE'])
+    if not os.path.exists(os.path.join(os.path.dirname(__file__), 'app/static/Data')):
+        CapturePosture(0,'')
+    else:
+        list_of_good_posture = os.listdir(app.config['IMAGE_GOOD_POSTURE'])
+        list_of_regular_posture = os.listdir(app.config['IMAGE_REGULAR_POSTURE']) 
+        list_of_bad_posture =os.listdir(app.config['IMAGE_BAD_POSTURE'])
     
+
     # Variables que se enlazan al html que llama la funcion
     context = {
         'list_of_good_posture': list_of_good_posture,
@@ -195,40 +206,45 @@ def upload():
     if images_form.validate_on_submit():
         file = images_form.file.data # Información del nombre
         filename = (file.filename) # Nombre del archivo
-        file_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), app.config['IMAGE_VALIDATION'], filename) # Ruta donde se guardara el archivo            
-        file.save(file_path) # Guardado de la imagen en la ruta que contiene la variable file_path
-        
-            # Validacion de clasificacion de imagen
-        if val_image(file_path) == 0:#Si la imagen coincide con el modelo se mete al primer if
-            new_filename = count_exist_file(app.config['IMAGE_GOOD_POSTURE'], 0) # Obtencion del nombre del archivo conforme el archivo faltante en caso contrario se omite
-            print(new_filename)
-            if (new_filename != 3 ):#Si el contador de imagenes esta incompleto en la carpeta hace el cambio de nombre por la imagen que falta
-                os.rename(os.path.join(app.config['IMAGE_VALIDATION'], filename), os.path.join(app.config['IMAGE_GOOD_POSTURE'], new_filename))
-            else:
-                #Si no manda mensaje para mostrar al usuario que la carpeta esta llena
-                flash('Ya existe el valor maximo de imagenes permitido de esta categoria')
-        elif val_image(file_path) == 1:
-            new_filename = count_exist_file(app.config['IMAGE_BAD_POSTURE'], 1)
-            print(new_filename)
-            if (new_filename != 3):
-                os.rename(os.path.join(app.config['IMAGE_VALIDATION'], filename), os.path.join(app.config['IMAGE_BAD_POSTURE'], new_filename))
-            else:
-                flash('Ya existe el valor maximo de imagenes permitido de esta categoria')
-        elif val_image(file_path) == 2:
-            new_filename = count_exist_file(app.config['IMAGE_REGULAR_POSTURE'], 2)
-            print(new_filename)
-            if (new_filename != 3):    
-                os.rename(os.path.join(app.config['IMAGE_VALIDATION'], filename), os.path.join(app.config['IMAGE_REGULAR_POSTURE'], new_filename))
-            else:
-                flash('Ya existe el valor maximo de imagenes permitido de esta categoria')
-        elif val_image(file_path) == 3:
-            flash('La imagen no presenta ninguna similitud entre las 3 posturas, favor de subir otra foto')
-        else:
-            flash("Los modelos necesitan ser creados para poder validar el tipo de postura de la imagen, vuelva a intentarlo despues de crear los modelos.")
+        if '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS:
+            file_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), app.config['IMAGE_VALIDATION'], filename) # Ruta donde se guardara el archivo            
+            file.save(file_path) # Guardado de la imagen en la ruta que contiene la variable file_path
             
-        if os.path.exists(file_path):
-            os.remove(file_path)
-            return redirect(url_for('upload'))
+            # Validacion de clasificacion de imagen
+            if val_image(file_path) == 0:#Si la imagen coincide con el modelo se mete al primer if
+                new_filename = count_exist_file(app.config['IMAGE_GOOD_POSTURE'], 0) # Obtencion del nombre del archivo conforme el archivo faltante en caso contrario se omite
+                print(new_filename)
+                if (new_filename != 3 ):#Si el contador de imagenes esta incompleto en la carpeta hace el cambio de nombre por la imagen que falta
+                    os.rename(os.path.join(app.config['IMAGE_VALIDATION'], filename), os.path.join(app.config['IMAGE_GOOD_POSTURE'], new_filename))
+                else:
+                    #Si no manda mensaje para mostrar al usuario que la carpeta esta llena
+                    flash('Ya existe el valor maximo de imagenes permitido de esta categoria')
+            elif val_image(file_path) == 1:
+                new_filename = count_exist_file(app.config['IMAGE_BAD_POSTURE'], 1)
+                print(new_filename)
+                if (new_filename != 3):
+                    os.rename(os.path.join(app.config['IMAGE_VALIDATION'], filename), os.path.join(app.config['IMAGE_BAD_POSTURE'], new_filename))
+                else:
+                    flash('Ya existe el valor maximo de imagenes permitido de esta categoria')
+            elif val_image(file_path) == 2:
+                new_filename = count_exist_file(app.config['IMAGE_REGULAR_POSTURE'], 2)
+                print(new_filename)
+                if (new_filename != 3):    
+                    os.rename(os.path.join(app.config['IMAGE_VALIDATION'], filename), os.path.join(app.config['IMAGE_REGULAR_POSTURE'], new_filename))
+                else:
+                    flash('Ya existe el valor maximo de imagenes permitido de esta categoria')
+            elif val_image(file_path) == 3:
+                flash('La imagen no presenta ninguna similitud entre las 3 posturas, favor de subir otra foto')
+            else:
+                flash("Los modelos necesitan ser creados para poder validar el tipo de postura de la imagen, vuelva a intentarlo despues de crear los modelos.")
+                
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                return redirect(url_for('upload'))
+            
+        else:
+                flash('El archivo no cumple con la extension de imagen del dataset, favor de subir otra imagen con extension jpg', category="error")
+                return redirect(url_for('upload'))
         
     return render_template('images.html', **context)
 
@@ -265,7 +281,15 @@ def update_images(filename, category):
 @fresh_login_required
 def create_images():
     CapturePosture(0, '')
-    flash('Imagenes creadas exitosamente')
+    flash('Imagenes creadas exitosamente, procediendo a generar modelo.')
+    if not exist_model():
+        flash('Procederan a crearse los modelos, favor de esperar sin salirse de esta pagina.')
+        training_process = multiprocessing.Process(target = entrenamiento())
+        training_process.start()
+        if training_process.is_alive == False:
+            flash('Modelo creado exitosamente')
+    else: 
+        flash("El modelo ha sido creado exitosamente y esta listo para su uso")
     return redirect(url_for('upload'))
 
 @app.route('/delete_good/<filename>')
@@ -323,26 +347,35 @@ def experimentacion():
             'username': username,
         }
     
+    contador = 0
+
     if exist_model() and count_files_by_extension(good, 'jpg') == 500 and count_files_by_extension(regular, 'jpg') == 500 and count_files_by_extension(bad, 'jpg') == 500:
         
         if experiment_form.validate_on_submit():
             epocas = experiment_form.epochs.data
             pasos = experiment_form.steps.data
             modelo = experiment_form.model.data
-
+            
+            epocas_cont = EpochLogger()
+            contador = epocas_cont.on_epoch_end(contador) # obtencion de epocas conforme el modelo
+            
             if (modelo == 1):
+                flash('Entrenando el modelo RGB...')
                 modeloRGB(epocas, pasos)
             elif (modelo == 2):
+                flash('Entrenando el modelo GREY...')
                 modeloGREY(epocas, pasos)
             else:
                 flash('Ocurrio un error inesperado..')
                 return redirect(url_for('experimentacion'))
 
-            return redirect(url_for('experimentacion'))
+            return redirect(url_for('experimentacion', values=jsonify({'progress': contador})))
     else:
         flash('No se puede usar el modulo de experimentación debido a la falta de imagenes o inexistencia en las categorías', category='error')
-    
+
     return render_template('experimentacion.html', **context)
+
+
 
 @app.route('/camara')
 @login_required
@@ -367,13 +400,15 @@ def restart_password():
     context = {
         'restart_form':restart_form,
     }
+    username = restart_form.username.data
     if restart_form.validate_on_submit() and (get_user_by_id(username)):
             
-            email_send = 'coao202495@upemor.edu.com'
-            cont = 'qemelmwvyarwjlri'
+
+            email_send = 'salgadolunae2@gmail.com'
+            cont = 'jrnl pmhv gkmj jtja'
 
             email = restart_form.email.data
-            username = restart_form.username.data
+            
             new_password = generate_password()   
             
             yag = yagmail.SMTP(user = email_send, password = cont)
@@ -387,7 +422,7 @@ def restart_password():
             #yag.send(destinatarios, asunto, [mensaje,html], attachments = [archivo])
             yag.send(destinatarios, asunto, mensaje)
 
-            update_password(username, new_password)
+            update_password(username, generate_password_hash(new_password))
 
             flash('Su contraseña ha sido restablecida correctamente, se ha enviado un correo')
             return redirect('hello')
@@ -406,7 +441,6 @@ def generate_password():
     for _ in range(10):
         new_password += choice(all)
     return new_password
-
 
 @app.after_request
 def add_header(response):

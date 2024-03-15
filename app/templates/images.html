@@ -17,6 +17,7 @@
 
     {{ wtf.quick_form(images_form) }}
     <hr>
+    <button> <a href="{{ url_for('create_images') }}">Generar Imagenes</a></button>
     <h3>Good Position Images:</h3>
     <div class="row">
     {% for image in list_of_good_posture %}

@@ -86,7 +86,7 @@ def entrenamiento(epocas, pasos):
         cnn.compile(loss='categorical_crossentropy', optimizer="adam", metrics=["acc", "mse"])
 
         # Entrenar red neuronal convolucional
-        cnn.fit(datos_entrenamiento, validation_data=datos_validacion, epochs=epocas, validation_steps=pasos, verbose=1)
+        history = cnn.fit(datos_entrenamiento, validation_data=datos_validacion, epochs=epocas, validation_steps=pasos, verbose=1)
 
         # Guardar el modelo y los pesos de entrenamiento
         cnn.save(os.path.join(os.path.dirname(__file__), "cnnGray_experimentacion.h5"))

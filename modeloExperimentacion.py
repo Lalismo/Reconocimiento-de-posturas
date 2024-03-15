@@ -1,7 +1,7 @@
 # Esta es mi primera red neuronal convolucional
 
 # Importar los métodos necesarios
-from keras.metrics import CategoricalAccuracy, CategoricalCrossentropy
+from keras.metrics import CategoricalAccuracy
 from keras.preprocessing.image import ImageDataGenerator
 from keras import optimizers
 from keras.models import Sequential
@@ -13,11 +13,8 @@ import tensorflow as tf
 import os
 import time
 
-
-
 train_path = os.path.join(os.path.dirname(__file__), 'app\static\Data\Training')
 val_path = os.path.join(os.path.dirname(__file__), 'app\static\Data\Validation')
-print(train_path)
 
 def exist_model():
     return (os.path.exists(os.path.join(os.path.dirname(__file__),'cnn_experimentacion.h5')) and os.path.exists(os.path.join(os.path.dirname(__file__), 'cnn_pesos_experimentacion.h5')))
@@ -93,7 +90,13 @@ def entrenamiento(epocas, pasos):
     cnn.compile(loss='categorical_crossentropy', optimizer="adam", metrics=[CategoricalAccuracy()])   
 
     #Entrenar red neuronal convolulcional   
-    cnn.fit(datos_entrenamiento,validation_data=datos_validacion, epochs=epocas, validation_steps=pasos,verbose=1)
+    history = cnn.fit(datos_entrenamiento,validation_data=datos_validacion, epochs=epocas, validation_steps=pasos,verbose=1)
+
+    # Guardar datos de metrica en historial
+    # Guarda el historial del entrenamiento
+    train_accuracy = history.history['categorical_accuracy']
+    val_accuracy = history.history['val_categorical_accuracy']
+    loss = history.history['loss']
 
     #Guardar el modelo y los pesos de entrenamiento   
 
@@ -107,7 +110,8 @@ def entrenamiento(epocas, pasos):
 
     altura,anchura=50,50    
     modelo= os.path.join(os.path.dirname(__file__), "cnn_experimentacion.h5")   
-    pesos= os.path.join(os.path.dirname(__file__), "cnn_pesos_experimentacion.h5")   
+    pesos= os.path.join(os.path.dirname(__file__), "cnn_pesos_experimentacion.h5")
+
 
     #Cargar el modelo y pesos   
     cnn=load_model(modelo)    
@@ -119,10 +123,7 @@ def entrenamiento(epocas, pasos):
     img_clasificar=np.expand_dims(img_clasificar,axis=0)
 
     #Clasificamos la imagen   
-    clase=cnn.predict(img_clasificar)   
-
-    print(clase) 
-       
+    clase=cnn.predict(img_clasificar)
 
     arg_max=np.argmax(clase[0])   
 
@@ -135,25 +136,17 @@ def entrenamiento(epocas, pasos):
     else:
       print("Empty")
       arg_max=3
-      
-      # Obtener las métricas de entrenamiento
-      train_accuracy = cnn.fit['categorical_accuracy']
 
-      # Obtener las métricas de validación
-      val_accuracy = cnn.fit['val_categorical_accuracy']
 
-      # Imprimir las métricas
-      print(f'Training Accuracy: {train_accuracy[-1]}')
-      print(f'Validation Accuracy: {val_accuracy[-1]}')
-
-      
+    print(f"Train Accuracy: {train_accuracy[-1]}")
+    print(f"Val Accuracy: {val_accuracy[-1]}")
 
     return current_time, train_accuracy[-1], val_accuracy[-1]
 
-  else:
+  else: 
 
     #Elegir la imagen a clasificar    
-    imagen= os.path.join(val, 'regular_1.jpg')
+    imagen= os.path.join(val, 'Regular_Posture/regular_1.jpg')
 
     altura,anchura=50,50    
     modelo= os.path.join(os.path.dirname(__file__), "cnn_experimentacion.h5")   
@@ -184,22 +177,7 @@ def entrenamiento(epocas, pasos):
     else:
       print("NADA")
       arg_max = 3
-    
-    
-    # Obtener las métricas de entrenamiento
-      train_accuracy = cnn.fit['categorical_accuracy']
-
-      # Obtener las métricas de validación
-      val_accuracy = cnn.fit['val_categorical_accuracy']
-
-      loss = cnn.fit['loss']
-      
-      # Imprimir las métricas
-      print(f'Training Accuracy: {train_accuracy[-1]}')
-      print(f'Validation Accuracy: {val_accuracy[-1]}')
-      print(f'')
    
-    return current_time, train_accuracy[-1], val_accuracy[-1]
 
 
 def val_image(val_path):

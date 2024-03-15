@@ -40,4 +40,5 @@ class ExperimentForm(FlaskForm):
 class Restart_Form(FlaskForm):
     username = StringField('Nombre de usuario', validators=[DataRequired()])
     email = EmailField('Correo de usuario', validators=[DataRequired()])
+    submit = SubmitField('Enviar')
     
