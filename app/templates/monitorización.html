@@ -22,7 +22,9 @@
 
 <center><img src="{{ url_for('video_feed') }}" alt="Posture Detection"></center>
 <center>
-<button class="cancelar">Cerrar Monitorización</button >
+    <form action="{{ url_for('detener_monitorizacion') }}">
+        <button class="cancelar" type="submit">Cerrar Monitorización</button>
+    </form>
 </center>
 
 {% endblock  %}

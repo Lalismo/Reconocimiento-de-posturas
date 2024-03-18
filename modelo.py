@@ -103,7 +103,8 @@ def entrenamiento():
     
     '''////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////'''
     #Elegir la imagen a clasificar    
-    imagen= os.path.join(val, 'Regular_Posture', 'regular_1.jpg')
+   
+    imagen = os.path.join(val, "Regular_Posture",'regular_1.jpg')
        
 
     altura,anchura=50,50    
@@ -140,41 +141,42 @@ def entrenamiento():
 
   else:
 
+      
+      #Elegir la imagen a clasificar    
+    for i in range(1,10):
+        imagen = os.path.join(val, "Good_Posture",f'good_{i}.jpg')
+
+        altura,anchura=50,50    
+        modelo= os.path.join(os.path.dirname(__file__), "cnn.h5")   
+        pesos= os.path.join(os.path.dirname(__file__), "cnn_pesos.h5")   
+
+        #Cargar el modelo y pesos   
+        cnn=load_model(modelo)    
+        cnn.load_weights(pesos)
+
+        #preparar imagen a clasificar
+        img_clasificar=load_img(imagen,target_size=(altura,anchura))
+        img_clasificar=img_to_array(img_clasificar)
+        img_clasificar=np.expand_dims(img_clasificar,axis=0)
+
+        #Clasificamos la imagen   
+        clase=cnn.predict(img_clasificar)   
+
+        print(clase)    
+
+        arg_max=np.argmax(clase[0])   
+
+        if arg_max==0:
+          print("Good posture")    
+        elif arg_max==1:
+          print("Bad posture") 
+        elif arg_max==2:
+          print("Regular posture")
+        else:
+          print("NADA")
+          arg_max = 3
+      
     
-    #Elegir la imagen a clasificar    
-    imagen= os.path.join(val, "Good_Posture",'good_3.jpg')
-
-    altura,anchura=50,50    
-    modelo= os.path.join(os.path.dirname(__file__), "cnn.h5")   
-    pesos= os.path.join(os.path.dirname(__file__), "cnn_pesos.h5")   
-
-    #Cargar el modelo y pesos   
-    cnn=load_model(modelo)    
-    cnn.load_weights(pesos)
-
-    #preparar imagen a clasificar
-    img_clasificar=load_img(imagen,target_size=(altura,anchura))
-    img_clasificar=img_to_array(img_clasificar)
-    img_clasificar=np.expand_dims(img_clasificar,axis=0)
-
-    #Clasificamos la imagen   
-    clase=cnn.predict(img_clasificar)   
-
-    print(clase)    
-
-    arg_max=np.argmax(clase[0])   
-
-    if arg_max==0:
-      print("Good posture")    
-    elif arg_max==1:
-      print("Bad posture") 
-    elif arg_max==2:
-      print("Regular posture")
-    else:
-      print("NADA")
-      arg_max = 3
-    
-   
     return current_time
 
 

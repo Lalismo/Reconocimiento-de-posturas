@@ -41,4 +41,9 @@ class Restart_Form(FlaskForm):
     username = StringField('Nombre de usuario', validators=[DataRequired()])
     email = EmailField('Correo de usuario', validators=[DataRequired()])
     submit = SubmitField('Enviar')
+
+class Report_Form(FlaskForm):
+    email = EmailField('Introduce tu correo', validators=[DataRequired()])
+    emailVerificate = EmailField('Verifica de nuevo tu correo', validators=[DataRequired()])
+    submit = SubmitField('Enviar')
     

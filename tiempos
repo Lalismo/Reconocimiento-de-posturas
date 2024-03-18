@@ -1,0 +1,75 @@
+import matplotlib
+import matplotlib.pyplot as plt
+from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Image
+from io import BytesIO
+
+def create_pdf(tiempo_buena, tiempo_regular, tiempo_mala):
+    matplotlib.use('Agg')
+
+    # Crear un objeto BytesIO para almacenar el contenido del PDF
+    buffer = BytesIO()
+
+    # Crear un documento PDF con reportlab
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+
+    elements = []
+
+    # Generar tabla de tiempos
+    data = [
+        ["Postura", "Tiempo Total"],
+        ["Buena", f"{tiempo_buena:.2f} s"],
+        ["Regular", f"{tiempo_regular:.2f} s"],
+        ["Mala", f"{tiempo_mala:.2f} s"]
+    ]
+    tabla = Table(data, colWidths=150, rowHeights=30)
+    tabla.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.gray),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+    ]))
+    elements.append(tabla)
+
+    # Generar gráfico
+    plt.figure(figsize=(6, 4))
+    x = [1, 2, 3, 4, 5]
+    y = [2, 4, 6, 8, 10]
+    plt.plot(x, y)
+    plt.title('Gráfico de ejemplo')
+    plt.xlabel('Eje X')
+    plt.ylabel('Eje Y')
+
+    # Guardar el gráfico en un objeto BytesIO
+    image_buffer = BytesIO()
+    plt.savefig(image_buffer, format='png')
+    plt.close()
+
+    # Crear un objeto Image con el contenido del gráfico
+    image = Image(image_buffer)
+    elements.append(image)
+
+    # Agregar los elementos al documento
+    doc.build(elements)
+
+    # Mover el cursor del objeto BytesIO al principio del archivo
+    buffer.seek(0)
+    
+   
+ 
+
+
+    # Guardar el contenido del PDF en un archivo
+    with open('documento.pdf', 'wb') as f:
+        f.write(buffer.read())
+
+
+
+buena, regular, mala = 10.5, 15.3, 20.7
+create_pdf(buena,regular, mala)
+
+
+

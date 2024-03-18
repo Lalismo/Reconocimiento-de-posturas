@@ -162,7 +162,7 @@ def CapturePosture(category:int, filename:list):
 
             angle_text_string = 'Neck : ' + str(int(neck_inclination)) + '  Torso : ' + str(int(torso_inclination))
 
-            if (90 <= neck_inclination <= 110)  and  (70 <= torso_inclination <= 110) and count_files_by_extension (goodposture, 'jpg') < 500:
+            if ((90 <= neck_inclination <= 110)  or  (70 <= torso_inclination <= 95)) and count_files_by_extension (goodposture, 'jpg') < 500:
                 good_frames += 1
 
                 cv2.putText(image, angle_text_string, (10, 30), font, 0.9, light_green, 2)
@@ -191,7 +191,7 @@ def CapturePosture(category:int, filename:list):
                 # Cada vez que se detecta una buena postura, aumenta el contador de buenas posturas
                 total_good_postures += 1
                 
-            elif (111 <= neck_inclination <= 125) and (70 <= torso_inclination <= 110)  and count_files_by_extension(regularposture, 'jpg') < 500:
+            elif ((111 <= neck_inclination <= 125) or (96 <= torso_inclination <= 105))  and count_files_by_extension(regularposture, 'jpg') < 500:
 
                 regular_frames += 1
                 cv2.putText(image, angle_text_string, (10, 30), font, 0.9, yellow, 2)
@@ -221,7 +221,7 @@ def CapturePosture(category:int, filename:list):
                 
                 total_regular_posture += 1
                 
-            elif (126 <= neck_inclination <= 180)and (70 <= torso_inclination <= 110) and count_files_by_extension(badposture, 'jpg') < 500:
+            elif ((126 <= neck_inclination <= 180) or (106 <= torso_inclination <= 115)) and count_files_by_extension(badposture, 'jpg') < 500:
                   
                 bad_frames += 1
                 cv2.putText(image, angle_text_string, (10, 30), font, 0.9, red, 2)

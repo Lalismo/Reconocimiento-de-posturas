@@ -5,7 +5,7 @@ from app import create_app
 from deteccionEnVivo import deteccion_en_vivo
 import os
 from capturaPosturas import CapturePosture, count_exist_file, count_files_by_extension
-#from deteccionEnVivo import deteccion_en_vivo
+from deteccionEnVivo import deteccion_en_vivo, tiempo
 from app.config import Config
 from app.forms import DeleteUserForm, UpdateUserForm, ImageForm, Signup_AdminForm, ExperimentForm, Restart_Form
 from app.firestore_service import  get_users, delete_user_by_id, update_user_by_id, get_type, get_user_by_id, user_put_data, update_password
@@ -19,11 +19,13 @@ from random import shuffle, choice
 import string
 import multiprocessing 
 from keras.callbacks import Callback
-
-class EpochLogger(Callback):
-    def on_epoch_end(self, epoch, logs=None):
-        epoch + 1
-        return epoch
+import matplotlib
+from matplotlib import pyplot as plt
+from io import BytesIO
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Image, Table, TableStyle
 
 #Iniciamos la llamada de nuestro app mandando a llamar nuestro create_app
 app = create_app()
@@ -33,6 +35,7 @@ app.config['IMAGE_VALIDATION'] = (r".\app\static\Data\Validation")
 app.config['IMAGE_GOOD_POSTURE'] = (r".\app\static\Data\Training\Good_Posture")
 app.config['IMAGE_REGULAR_POSTURE'] = (r".\app\static\Data\Training\Regular_Posture")
 app.config['IMAGE_BAD_POSTURE']=(r".\app\static\Data\Training\Bad_Posture")
+
 
 @app.cli.command()
 def test():
@@ -356,8 +359,6 @@ def experimentacion():
             pasos = experiment_form.steps.data
             modelo = experiment_form.model.data
             
-            epocas_cont = EpochLogger()
-            contador = epocas_cont.on_epoch_end(contador) # obtencion de epocas conforme el modelo
             
             if (modelo == 1):
                 flash('Entrenando el modelo RGB...')
@@ -369,7 +370,7 @@ def experimentacion():
                 flash('Ocurrio un error inesperado..')
                 return redirect(url_for('experimentacion'))
 
-            return redirect(url_for('experimentacion', values=jsonify({'progress': contador})))
+            return redirect(url_for('experimentacion'))
     else:
         flash('No se puede usar el modulo de experimentación debido a la falta de imagenes o inexistencia en las categorías', category='error')
 
@@ -402,36 +403,138 @@ def restart_password():
     }
     username = restart_form.username.data
     if restart_form.validate_on_submit() and (get_user_by_id(username)):
-            
-
-            email_send = 'salgadolunae2@gmail.com'
-            cont = 'jrnl pmhv gkmj jtja'
-
-            email = restart_form.email.data
-            
-            new_password = generate_password()   
-            
-            yag = yagmail.SMTP(user = email_send, password = cont)
-
-            destinatarios = [email]
-            asunto = 'Restablecimiento de contraseña Sistema Correctivo de Postura'
-            mensaje = f'Su nueva contraseña es: {new_password}'
-            #html = '<h1><center><center><h1>'
-            #archivo = ''
-
-            #yag.send(destinatarios, asunto, [mensaje,html], attachments = [archivo])
-            yag.send(destinatarios, asunto, mensaje)
-
-            update_password(username, generate_password_hash(new_password))
-
-            flash('Su contraseña ha sido restablecida correctamente, se ha enviado un correo')
-            return redirect('hello')
+        
+        email_send = 'salgadolunae2@gmail.com'
+        cont = 'jrnl pmhv gkmj jtja'
+        email = restart_form.email.data
+        
+        new_password = generate_password()   
+        
+        yag = yagmail.SMTP(user = email_send, password = cont)
+        destinatarios = [email]
+        asunto = 'Restablecimiento de contraseña Sistema Correctivo de Postura'
+        mensaje = f'Su nueva contraseña es: {new_password}'
+        
+        #html = '<h1><center><center><h1>'
+        #archivo = ''
+        #yag.send(destinatarios, asunto, [mensaje,html], attachments = [archivo])
+        
+        yag.send(destinatarios, asunto, mensaje)
+        update_password(username, generate_password_hash(new_password))
+        flash('Su contraseña ha sido restablecida correctamente, se ha enviado un correo')
+        return redirect('hello')
     
     else:
         flash("El usuario ingresado no existe o los datos ingresados son incorrectos", category = 'error')
         
             
         return render_template('restart_password.html', **context)
+
+@app.route('/detener_monitorizacion')
+def detener_monitorizacion():
+
+
+    print(tiempo.get_times())
+    good, regular, bad = tiempo.get_times()
+    create_pdf(good, regular, bad)
+
+    return redirect(url_for('reportes'))
+
+
+
+
+# def enviar_correo_reporte(email):
+#     email_send = 'salgadolunae2@gmail.com'
+#     cont = 'jrnl pmhv gkmj jtja'
+#     email = email
+    
+#     new_password = generate_password()   
+    
+#     yag = yagmail.SMTP(user = email_send, password = cont)
+#     destinatarios = [email]
+#     asunto = 'Reporte diario sobre su Postura'
+#     mensaje = 'Este es su reporte de posturas durante el periodo de tiempo que utilizo la monitorizacion'
+    
+#     #html = '<h1><center><center><h1>'
+#     #archivo = ''
+#     #yag.send(destinatarios, asunto, [mensaje,html], attachments = [archivo])
+    
+#     archivo = os.path.join(os.path.dirname(__file__), 'documento.pdf')
+     
+#     yag.send(destinatarios, asunto, mensaje, attachments=[archivo])
+#     #update_password(username, generate_password_hash(new_password))
+    
+@app.route('/reportes', methods = ['GET'])
+def reportes():
+    username = current_user.id
+    context = {
+        'user_type': get_type(username),
+        'username': username,
+    }
+
+
+
+
+    return render_template('reportes.html', **context)
+
+def create_pdf (tiempo_buena, tiempo_regular, tiempo_mala):
+    
+    matplotlib.use('Agg')
+    # Crear un objeto BytesIO para almacenar el contenido del PDF
+    buffer = BytesIO()
+
+    # Crear un documento PDF con reportlab
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+ 
+
+    elements= []
+
+    # Generar tabla de tiempos
+    data = [
+        ["Postura", "Tiempo Total"],
+        ["Buena", f"{tiempo_buena:.2f} s"],
+        ["Regular", f"{tiempo_regular:.2f} s"],
+        ["Mala", f"{tiempo_mala:.2f} s"]
+    ]
+    tabla = Table(data, colWidths=150, rowHeights=30)
+    tabla.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.gray),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+    ]))
+    elements.append(tabla)
+
+    # Generar gráfico
+    plt.figure(figsize=(6, 4))
+    x = [1, 2, 3, 4, 5]
+    y = [2, 4, 6, 8, 10]
+    plt.plot(x, y)
+    plt.title('Gráfico de ejemplo')
+    plt.xlabel('Eje X')
+    plt.ylabel('Eje Y')
+
+    # Guardar el gráfico en un objeto BytesIO
+    image_buffer = BytesIO()
+    plt.savefig(image_buffer, format='png')
+    plt.close()
+
+    # Crear un objeto Image con el contenido del gráfico
+    image = Image(image_buffer)
+    elements.append(image)
+
+    # Agregar los elementos al documento
+    doc.build(elements)
+
+    # Mover el cursor del objeto BytesIO al principio del archivo
+    buffer.seek(0)
+
+
+    # Guardar el contenido del PDF en un archivo
+    with open('documento.pdf', 'wb') as f:
+        f.write(buffer.read())
 
 
 def generate_password():
