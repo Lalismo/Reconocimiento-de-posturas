@@ -1,4 +1,4 @@
-from flask import Flask,send_from_directory, render_template, Response, request, make_response, redirect, abort, session, url_for, flash, jsonify
+from flask import render_template, Response, request, make_response, redirect, abort, session, url_for, flash, send_file
 import unittest
 from flask_login import fresh_login_required, login_required, current_user, login_fresh, login_manager, login_user
 from app import create_app
@@ -12,7 +12,9 @@ from app.firestore_service import  get_users, delete_user_by_id, update_user_by_
 from modelo import exist_model, val_image, entrenamiento
 from werkzeug.security import generate_password_hash
 from app.models import UserData
+from modeloExperimentacion import create_pdf as experimentacionRGB_pdf
 from modeloExperimentacion import entrenamiento as modeloRGB
+from modeloGrayExperimentacion import create_pdf as experimentacionGRAY_pdf
 from modeloGrayExperimentacion import entrenamiento as modeloGREY
 import yagmail
 from random import shuffle, choice
@@ -349,28 +351,28 @@ def experimentacion():
             'user_type': get_type(username),
             'username': username,
         }
-    
-    contador = 0
-
-    if exist_model() and count_files_by_extension(good, 'jpg') == 500 and count_files_by_extension(regular, 'jpg') == 500 and count_files_by_extension(bad, 'jpg') == 500:
+    flash('Al momento de hacer clic al botón de iniciar experimentación tendra que esperar a que aparezca un mensaje que indique la finalización del modelo')
+    if exist_model() and count_files_by_extension(good, 'jpg') == 500 and count_files_by_extension(regular, 'jpg') == 500 and count_files_by_extension(bad, 'jpg') == 500: 
         
         if experiment_form.validate_on_submit():
             epocas = experiment_form.epochs.data
             pasos = experiment_form.steps.data
             modelo = experiment_form.model.data
             
-            
             if (modelo == 1):
-                flash('Entrenando el modelo RGB...')
-                modeloRGB(epocas, pasos)
+                flash('Modelo RGB entrenado correctamente..., descargue el pdf para vizualizar su reporte de métricas')
+                train_time, val, loss, epochs, steps= modeloRGB(epocas, pasos)
+                experimentacionRGB_pdf(train_time, val, loss, epochs, steps)
+                return redirect(url_for('experimentacion'))
             elif (modelo == 2):
-                flash('Entrenando el modelo GREY...')
-                modeloGREY(epocas, pasos)
+                flash('Modelo Gray entrenado correctamente... Descargue el pdf para vizualizar su reporte de métricas')
+                train_time, val, loss, epochs, steps= modeloGREY(epocas, pasos)
+                experimentacionGRAY_pdf(train_time, val, loss, epochs, steps)
+                return redirect(url_for('experimentacion'))
             else:
                 flash('Ocurrio un error inesperado..')
                 return redirect(url_for('experimentacion'))
-
-            return redirect(url_for('experimentacion'))
+            
     else:
         flash('No se puede usar el modulo de experimentación debido a la falta de imagenes o inexistencia en las categorías', category='error')
 
@@ -415,14 +417,11 @@ def restart_password():
         asunto = 'Restablecimiento de contraseña Sistema Correctivo de Postura'
         mensaje = f'Su nueva contraseña es: {new_password}'
         
-        #html = '<h1><center><center><h1>'
-        #archivo = ''
-        #yag.send(destinatarios, asunto, [mensaje,html], attachments = [archivo])
         
         yag.send(destinatarios, asunto, mensaje)
         update_password(username, generate_password_hash(new_password))
         flash('Su contraseña ha sido restablecida correctamente, se ha enviado un correo')
-        return redirect('hello')
+        return redirect(url_for('hello'))
     
     else:
         flash("El usuario ingresado no existe o los datos ingresados son incorrectos", category = 'error')
@@ -433,36 +432,11 @@ def restart_password():
 @app.route('/detener_monitorizacion')
 def detener_monitorizacion():
 
-
     print(tiempo.get_times())
     good, regular, bad = tiempo.get_times()
-    create_pdf(good, regular, bad)
+    create_pdf_tiempo_usuario(good, regular, bad)
 
     return redirect(url_for('reportes'))
-
-
-
-
-# def enviar_correo_reporte(email):
-#     email_send = 'salgadolunae2@gmail.com'
-#     cont = 'jrnl pmhv gkmj jtja'
-#     email = email
-    
-#     new_password = generate_password()   
-    
-#     yag = yagmail.SMTP(user = email_send, password = cont)
-#     destinatarios = [email]
-#     asunto = 'Reporte diario sobre su Postura'
-#     mensaje = 'Este es su reporte de posturas durante el periodo de tiempo que utilizo la monitorizacion'
-    
-#     #html = '<h1><center><center><h1>'
-#     #archivo = ''
-#     #yag.send(destinatarios, asunto, [mensaje,html], attachments = [archivo])
-    
-#     archivo = os.path.join(os.path.dirname(__file__), 'documento.pdf')
-     
-#     yag.send(destinatarios, asunto, mensaje, attachments=[archivo])
-#     #update_password(username, generate_password_hash(new_password))
     
 @app.route('/reportes', methods = ['GET'])
 def reportes():
@@ -472,22 +446,38 @@ def reportes():
         'username': username,
     }
 
-
-
-
     return render_template('reportes.html', **context)
 
-def create_pdf (tiempo_buena, tiempo_regular, tiempo_mala):
+@app.route('/download_pdf_rgb')
+@login_required
+def download_pdf_rgb():
+    pdf = os.path.join(os.path.dirname(__file__), "MetricasExperimentacionRGB.pdf")
+    if os.path.exists(pdf):
+        filename = pdf
+        return send_file(filename, as_attachment=True)
+    else:
+        flash('El archivo pdf aun no se ha creado, inicie la experimentacion para poder descargar el archivo')
+        return redirect(url_for('experimentacion'))
     
-    matplotlib.use('Agg')
+@app.route('/download_pdf_gray')
+@login_required
+def download_pdf_gray():
+    pdf = os.path.join(os.path.dirname(__file__), "MetricasExperimentacionGRAY.pdf")  
+    if os.path.exists(pdf):
+        filename = pdf
+        return send_file(filename, as_attachment=True)
+    else:
+        flash('El archivo pdf aun no se ha creado, inicie la experimentacion para poder descargar el archivo')
+        return redirect(url_for('experimentacion'))
+
+def create_pdf_tiempo_usuario(tiempo_buena, tiempo_regular, tiempo_mala):
     # Crear un objeto BytesIO para almacenar el contenido del PDF
     buffer = BytesIO()
 
     # Crear un documento PDF con reportlab
     doc = SimpleDocTemplate(buffer, pagesize=letter)
- 
 
-    elements= []
+    elements = []
 
     # Generar tabla de tiempos
     data = [
@@ -496,6 +486,7 @@ def create_pdf (tiempo_buena, tiempo_regular, tiempo_mala):
         ["Regular", f"{tiempo_regular:.2f} s"],
         ["Mala", f"{tiempo_mala:.2f} s"]
     ]
+
     tabla = Table(data, colWidths=150, rowHeights=30)
     tabla.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.gray),
@@ -507,15 +498,13 @@ def create_pdf (tiempo_buena, tiempo_regular, tiempo_mala):
     ]))
     elements.append(tabla)
 
-    # Generar gráfico
+    # Generar gráfico de pastel
     plt.figure(figsize=(6, 4))
-    x = [1, 2, 3, 4, 5]
-    y = [2, 4, 6, 8, 10]
-    plt.plot(x, y)
-    plt.title('Gráfico de ejemplo')
-    plt.xlabel('Eje X')
-    plt.ylabel('Eje Y')
-
+    labels = ['Buena', 'Regular', 'Mala']
+    sizes = [tiempo_buena, tiempo_regular, tiempo_mala]
+    plt.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=140)
+    plt.title('Distribución de Tiempos')
+    
     # Guardar el gráfico en un objeto BytesIO
     image_buffer = BytesIO()
     plt.savefig(image_buffer, format='png')
@@ -530,7 +519,6 @@ def create_pdf (tiempo_buena, tiempo_regular, tiempo_mala):
 
     # Mover el cursor del objeto BytesIO al principio del archivo
     buffer.seek(0)
-
 
     # Guardar el contenido del PDF en un archivo
     with open('documento.pdf', 'wb') as f:
