@@ -164,4 +164,4 @@ def entrenamiento():
 
         return time.time() - current_time
 
-entrenamiento()
+

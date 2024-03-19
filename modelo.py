@@ -30,10 +30,10 @@ def entrenamiento():
   val = os.path.join(os.path.dirname(__file__), 'app\static\Data\Validation')
 
   # Definir los hiperparámetros   
-  epocas = 150
+  epocas = 75
   altura, anchura = 50, 50    
   batch_size = 2    
-  pasos = 150 
+  pasos = 75 
   # Son hiperparámetros para la convolución   
   # Primera convolución   
   kernels_capa1 = 32    
@@ -43,8 +43,7 @@ def entrenamiento():
   size_kernels2 = (3, 3)    
   pooling_size = (2, 2)   
   # Clases    
-  clases = 3    
-  learning_rate = 0.001   
+  clases = 3   
 
   # Definir los datos sintéticos y la lectura de las imágenes
   if not exist_model(): 
