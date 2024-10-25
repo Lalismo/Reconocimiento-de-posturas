@@ -5,7 +5,7 @@ from firebase_admin import credentials
 from firebase_admin import firestore
 
 credential = credentials.ApplicationDefault()
-project_id = 'tesis-405201'
+project_id = 'id-De-Tu-Proyecto'
 
 firebase_admin.initialize_app(credential, {
     'projectId': project_id,

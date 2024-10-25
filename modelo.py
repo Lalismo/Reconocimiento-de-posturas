@@ -30,30 +30,33 @@ def entrenamiento():
   val = os.path.join(os.path.dirname(__file__), 'app\static\Data\Validation')
 
   # Definir los hiperparámetros   
-  epocas = 75
+  epocas = 85
   altura, anchura = 50, 50    
-  batch_size = 2    
-  pasos = 75 
+  batch_size = 32    
+  pasos = 100
   # Son hiperparámetros para la convolución   
   # Primera convolución   
   kernels_capa1 = 32    
-  size_kernels1 = (3, 3)    
-  # Primera Convolución:    
+  size_kernels1 = (3, 3)   
+  pooling_size = (2, 2) 
+  # Segunda Convolución:    
   kernels_capa2 = 64    
   size_kernels2 = (3, 3)    
-  pooling_size = (2, 2)   
+  pooling_size2 = (2, 2)
+ 
   # Clases    
   clases = 3   
 
   # Definir los datos sintéticos y la lectura de las imágenes
   if not exist_model(): 
     
-    entrenar = ImageDataGenerator(rescale=1 / 250, shear_range=0.2, zoom_range=0.2, horizontal_flip=True)
+    entrenar = ImageDataGenerator(rescale=1 / 250, shear_range=0.2, zoom_range=1)
     validar = ImageDataGenerator(rescale=1 / 250)
     
     datos_entrenamiento = entrenar.flow_from_directory(train, target_size=(altura,anchura),
                                                       batch_size=batch_size, class_mode="categorical",
                                                       classes=['Good_Posture', 'Bad_Posture', 'Regular_Posture'])    
+    
     datos_validacion = validar.flow_from_directory(val, target_size=(altura, anchura), batch_size=batch_size,
                                                     class_mode="categorical",   
                                                     classes=['Good_Posture', 'Bad_Posture', 'Regular_Posture'])   
@@ -73,19 +76,20 @@ def entrenamiento():
     cnn.add(Convolution2D(kernels_capa2, size_kernels2, padding="same", activation="relu")    )
 
     # Pooling   
-    cnn.add(MaxPooling2D(pool_size=pooling_size))   
+    cnn.add(MaxPooling2D(pool_size=pooling_size2))  
 
+   
+
+    # Sirve para el sobreentrenamiento    
+    cnn.add(tf.keras.layers.Dropout(0.5))
     # Aplanado de las matrices o tensores 2D    
     cnn.add(tf.keras.layers.Flatten())    
-
     # Conectar los datos con una MLP o perceptrón multicapa   
     # 256 se refiere a las neuronas   
     cnn.add(tf.keras.layers.Dense(256, activation="relu"))    
-    cnn.add(tf.keras.layers.Dense(256, activation="relu"))    
+    #cnn.add(tf.keras.layers.Dense(512, activation="relu"))    
 
-    # Sirve para el sobreentrenamiento    
-    cnn.add(tf.keras.layers.Dropout(0.5))  # Porcentaje para apagar las neuronas sobre la capa oculta   
-
+    # Porcentaje para apagar las neuronas sobre la capa oculta   
     # Clases = 4    
     cnn.add(tf.keras.layers.Dense(clases, activation="softmax"))    
 
@@ -103,7 +107,7 @@ def entrenamiento():
     '''////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////'''
     #Elegir la imagen a clasificar    
    
-    imagen = os.path.join(val, "Regular_Posture",'regular_1.jpg')
+    imagen = os.path.join(val, "Regular_Posture",'regular_250.jpg')
        
 
     altura,anchura=50,50    
@@ -216,6 +220,8 @@ def val_image(val_path):
         print("NADA")
         arg_max == 3
     return arg_max
+  
+  
   
   
 if __name__ == '__main__':

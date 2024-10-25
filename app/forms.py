@@ -28,7 +28,6 @@ class DeleteUserForm(FlaskForm):
 
 class UpdateUserForm(FlaskForm):
     email = EmailField('Correo de usuario', validators=[DataRequired()])
-    phone = IntegerField('Numero de telefono', validators = [DataRequired(),NumberRange(0000000000,9999999999)])
     submit = SubmitField('Actualizar')
 
 class ExperimentForm(FlaskForm):

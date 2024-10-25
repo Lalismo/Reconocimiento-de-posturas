@@ -1,11 +1,11 @@
+import datetime
 from flask import render_template, Response, request, make_response, redirect, abort, session, url_for, flash, send_file
 import unittest
 from flask_login import fresh_login_required, login_required, current_user, login_fresh, login_manager, login_user
 from app import create_app
-from deteccionEnVivo import deteccion_en_vivo
 import os
 from capturaPosturas import CapturePosture, count_exist_file, count_files_by_extension
-from deteccionEnVivo import deteccion_en_vivo, tiempo
+from deteccionEnvivo3 import detect_posture, tiempo
 from app.config import Config
 from app.forms import DeleteUserForm, UpdateUserForm, ImageForm, Signup_AdminForm, ExperimentForm, Restart_Form
 from app.firestore_service import  get_users, delete_user_by_id, update_user_by_id, get_type, get_user_by_id, user_put_data, update_password
@@ -28,6 +28,7 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Image, Table, TableStyle
+import shutil
 
 #Iniciamos la llamada de nuestro app mandando a llamar nuestro create_app
 app = create_app()
@@ -37,6 +38,7 @@ app.config['IMAGE_VALIDATION'] = (r".\app\static\Data\Validation")
 app.config['IMAGE_GOOD_POSTURE'] = (r".\app\static\Data\Training\Good_Posture")
 app.config['IMAGE_REGULAR_POSTURE'] = (r".\app\static\Data\Training\Regular_Posture")
 app.config['IMAGE_BAD_POSTURE']=(r".\app\static\Data\Training\Bad_Posture")
+
 
 
 @app.cli.command()
@@ -119,6 +121,10 @@ def hello():
 @fresh_login_required
 def delete(user_id):
     delete_user_by_id(user_id=user_id)
+    ruta_reportes = os.path.join(os.path.join(os.path.dirname(__file__), 'app/static/Reportes/'))
+    if ruta_reportes.validate_on_submit():
+        ruta_reportes_usuario = os.path.join(ruta_reportes, user_id)
+        shutil.rmtree(ruta_reportes_usuario)
     return redirect(url_for('hello'))
 
 @app.route('/update', methods=['GET'])
@@ -191,6 +197,9 @@ def upload():
     
     if not os.path.exists(os.path.join(os.path.dirname(__file__), 'app/static/Data')):
         CapturePosture(0,'')
+        list_of_good_posture = os.listdir(app.config['IMAGE_GOOD_POSTURE'])
+        list_of_regular_posture = os.listdir(app.config['IMAGE_REGULAR_POSTURE']) 
+        list_of_bad_posture =os.listdir(app.config['IMAGE_BAD_POSTURE'])
     else:
         list_of_good_posture = os.listdir(app.config['IMAGE_GOOD_POSTURE'])
         list_of_regular_posture = os.listdir(app.config['IMAGE_REGULAR_POSTURE']) 
@@ -352,7 +361,7 @@ def experimentacion():
             'username': username,
         }
     flash('Al momento de hacer clic al botón de iniciar experimentación tendra que esperar a que aparezca un mensaje que indique la finalización del modelo')
-    if exist_model() and count_files_by_extension(good, 'jpg') == 500 and count_files_by_extension(regular, 'jpg') == 500 and count_files_by_extension(bad, 'jpg') == 500: 
+    if exist_model() and (count_files_by_extension(good, 'jpg') == count_files_by_extension(regular, 'jpg') == count_files_by_extension(bad, 'jpg') ): 
         
         if experiment_form.validate_on_submit():
             epocas = experiment_form.epochs.data
@@ -378,8 +387,6 @@ def experimentacion():
 
     return render_template('experimentacion.html', **context)
 
-
-
 @app.route('/camara')
 @login_required
 @fresh_login_required
@@ -395,7 +402,7 @@ def camara():
 @login_required
 @fresh_login_required
 def video_feed():
-    return Response(deteccion_en_vivo(), mimetype='multipart/x-mixed-replace; boundary=frame')
+    return Response(detect_posture(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @app.route('/restart_password', methods=['GET', 'POST'])
 def restart_password():
@@ -415,7 +422,7 @@ def restart_password():
         yag = yagmail.SMTP(user = email_send, password = cont)
         destinatarios = [email]
         asunto = 'Restablecimiento de contraseña Sistema Correctivo de Postura'
-        mensaje = f'Su nueva contraseña es: {new_password}'
+        mensaje = f'Su nueva contraseña es: {new_password} \nPara el usuario: {username}'
         
         
         yag.send(destinatarios, asunto, mensaje)
@@ -430,26 +437,47 @@ def restart_password():
         return render_template('restart_password.html', **context)
 
 @app.route('/detener_monitorizacion')
+@login_required
+@fresh_login_required
 def detener_monitorizacion():
 
     print(tiempo.get_times())
     good, regular, bad = tiempo.get_times()
+
+    pdf = os.path.join(os.path.dirname(__file__), 'Reporte_tiempo_diario.pdf')
+    if (os.path.exists(pdf)):
+          os.remove(pdf)
+
     create_pdf_tiempo_usuario(good, regular, bad)
 
     return redirect(url_for('reportes'))
     
-@app.route('/reportes', methods = ['GET'])
+@app.route('/reportes', methods = ['GET', 'POST'])
+@login_required
+@fresh_login_required
 def reportes():
     username = current_user.id
+    ruta_reportes_usuario = os.path.join(os.path.dirname(__file__), 'app/static/Reportes/', username)
+    list_of_reports = []
+    
+    # Verificar si la carpeta existe
+    if os.path.exists(ruta_reportes_usuario):
+        # Obtener una lista de archivos en la carpeta de reportes
+        list_of_reports = os.listdir(ruta_reportes_usuario)
+        print(list_of_reports)
+    print(list_of_reports)
+
     context = {
         'user_type': get_type(username),
         'username': username,
+        'list_of_reports': list_of_reports,
     }
 
     return render_template('reportes.html', **context)
 
 @app.route('/download_pdf_rgb')
 @login_required
+@fresh_login_required
 def download_pdf_rgb():
     pdf = os.path.join(os.path.dirname(__file__), "MetricasExperimentacionRGB.pdf")
     if os.path.exists(pdf):
@@ -461,6 +489,7 @@ def download_pdf_rgb():
     
 @app.route('/download_pdf_gray')
 @login_required
+@fresh_login_required
 def download_pdf_gray():
     pdf = os.path.join(os.path.dirname(__file__), "MetricasExperimentacionGRAY.pdf")  
     if os.path.exists(pdf):
@@ -470,8 +499,42 @@ def download_pdf_gray():
         flash('El archivo pdf aun no se ha creado, inicie la experimentacion para poder descargar el archivo')
         return redirect(url_for('experimentacion'))
 
+@app.route('/download_pdf_user/<filename>')
+@login_required
+@fresh_login_required
+def download_pdf_user(filename):
+    # Obtener la fecha y hora actual
+    username = current_user.id
+    # Nombre del archivo PDF para el día actual
+    pdf_filename = os.path.join('app/static/Reportes/', username, filename)
+    pdf_path = os.path.join(os.path.dirname(__file__), pdf_filename)
+
+    if os.path.exists(pdf_path):
+        return send_file(pdf_path, as_attachment=True)
+    else:
+        flash('El archivo no existe.')
+        return redirect(url_for('reportes'))
+
 def create_pdf_tiempo_usuario(tiempo_buena, tiempo_regular, tiempo_mala):
+    # Nombre de usuario
+    username = current_user.id
+    # Creacion de rutas de los reportes
+    ruta_reportes = os.path.join(os.path.join(os.path.dirname(__file__), 'app/static/Reportes/'))
+    ruta_reportes_usuario = os.path.join(ruta_reportes, username)
+    
+    # Validacion de que existan los reportes en caso contrario se crean los directorios
+    if not os.path.exists(ruta_reportes):
+        os.makedirs(ruta_reportes)
+    
+    if not os.path.exists(ruta_reportes_usuario):
+        os.makedirs(ruta_reportes_usuario)
+
+    # Obtener fecha y hora actual
+    now = datetime.datetime.now()
+    # Formatear la fecha y hora como una cadena legible
+    date_time_string = now.strftime("%Y-%m-%d")
     # Crear un objeto BytesIO para almacenar el contenido del PDF
+    matplotlib.use('Agg')
     buffer = BytesIO()
 
     # Crear un documento PDF con reportlab
@@ -521,7 +584,7 @@ def create_pdf_tiempo_usuario(tiempo_buena, tiempo_regular, tiempo_mala):
     buffer.seek(0)
 
     # Guardar el contenido del PDF en un archivo
-    with open('documento.pdf', 'wb') as f:
+    with open(os.path.join(ruta_reportes_usuario, f'Reporte_postura_diario_({date_time_string}).pdf'), 'wb') as f:
         f.write(buffer.read())
 
 

@@ -12,7 +12,6 @@ from keras.models import load_model, Model
 import tensorflow as tf
 import os
 import time
-import multiprocessing
 import matplotlib
 from matplotlib import pyplot as plt
 from io import BytesIO
@@ -113,7 +112,7 @@ def entrenamiento(epocas, pasos):
     
     '''////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////'''
     #Elegir la imagen a clasificar    
-    imagen= os.path.join(val, 'Regular_Posture', 'regular_1.jpg')
+    imagen= os.path.join(val, 'Regular_Posture', 'regular_250.jpg')
        
 
     altura,anchura=50,50    
@@ -148,10 +147,10 @@ def entrenamiento(epocas, pasos):
     tiempo_final = time.time() - inicio
 
     print(f'current_time: {tiempo_final}')
-    print(f"Accuracy: {accuracy[-1]}")
-    print(f'Loss: {loss[-1]}')
+    print(f'Loss Completo: {loss}')
+    print(f'Accuracy Completo: {accuracy}')
     
-    return tiempo_final, accuracy[-1], loss[-1], epocas, pasos
+    return tiempo_final, accuracy, loss, epocas, pasos
 
   else:
 
@@ -161,7 +160,7 @@ def entrenamiento(epocas, pasos):
 
     if (os.path.exists(pdf)):
       os.remove(pdf)
-      
+    
     os.remove(modelo_experimentacion)
     os.remove(pesos_experimentacion)
     
@@ -223,8 +222,8 @@ def create_pdf (time, accuracy, loss, epochs, pasos):
         ["Pasos", f"{pasos}"],
         ["Epocas", f"{epochs}"],
         ["Time of training", f"{time:.2f}"],
-        ["Accuraccy", f"{accuracy:.2f}"],
-        ["Categorical Crossentropy", f"{loss:.2f}"]
+        ["Accuraccy", f"{accuracy[-1]:.2f}"],
+        ["Categorical Crossentropy", f"{loss[-1]:.2f}"]
     ]
     
     tabla = Table(data, colWidths=150, rowHeights=30)
@@ -240,13 +239,23 @@ def create_pdf (time, accuracy, loss, epochs, pasos):
 
     # Generar gráfico
     plt.figure(figsize=(6, 4))
-    x = [1, 2, 3, 4, 5]
-    y = [2, 4, 6, 8, 10]
+    x = range(epochs)
+    y = accuracy
+    y2 = loss
+
+    
+    
     plt.plot(x, y)
-    plt.title('Gráfico de ejemplo')
+    plt.xticks(x,rotation='vertical')
+    plt.plot(x, y2)
+    plt.xticks(x,rotation='vertical')
+    plt.title('Gráfico de metricas')
     plt.xlabel('Eje X')
     plt.ylabel('Eje Y')
+    plt.legend('Metricas de el experimento realizado')
 
+
+   
     # Guardar el gráfico en un objeto BytesIO
     image_buffer = BytesIO()
     plt.savefig(image_buffer, format='png')
@@ -269,6 +278,7 @@ def create_pdf (time, accuracy, loss, epochs, pasos):
 
 
 if __name__ == '__main__':
-  train_time, val, loss, epochs, steps= entrenamiento()
-  print(train_time, val, loss, epochs, steps)
+  epocas=2
+  pasos=2
+  train_time, val, loss, epochs, steps= entrenamiento(epocas, pasos)
   create_pdf(train_time, val, loss, epochs, steps)

@@ -113,7 +113,7 @@ def entrenamiento(epocas, pasos):
     
     '''////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////'''
     #Elegir la imagen a clasificar    
-    imagen= os.path.join(val, 'Regular_Posture', 'regular_1.jpg')
+    imagen= os.path.join(val, 'Regular_Posture', 'regular_250.jpg')
        
 
     altura,anchura=50,50    
